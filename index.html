@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学習タイピング</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.1.2/dist/kuroshiro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+<style>
+body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#0f172a; height:100vh; height:100dvh; }
+.key { border:1px solid #334155; border-bottom-width:4px; border-radius:6px; background:#1e293b; color:#cbd5e1; display:flex; align-items:center; justify-content:center; font-weight:bold; font-family:'Courier New',monospace; font-size:clamp(.7rem,1.8vh,1.1rem); transition:all .05s; }
+.key.active { background:#f97316; color:#fff; border-color:#c2410c; transform:translateY(2px); border-bottom-width:2px; }
+.finger { background:#334155; border-radius:999px 999px 0 0; transition:background-color .1s; }
+.finger.active { background:#f97316; }
+.flash-error { animation:flashBg .15s ease-out; }
+@keyframes flashBg { 0% { background:#fecaca; } 100% { background:#fff; } }
+.kanji-line { font-size:clamp(1rem,2.8vh,1.6rem); font-weight:700; color:#1e293b; line-height:1.6; }
+.node { display:inline-flex; flex-direction:column; align-items:center; padding:0 3px; }
+.node .k { font-size:clamp(1.1rem,3.2vh,1.7rem); font-weight:600; line-height:1.4; white-space:pre; }
+.node .r { font-size:clamp(.8rem,2vh,1.15rem); font-family:'Courier New',monospace; font-weight:bold; letter-spacing:.08em; white-space:pre; min-height:1.4em; }
+.key-row { display:flex; justify-content:center; gap:clamp(2px,.5vw,6px); height:clamp(20px,4.5vh,45px); margin-bottom:clamp(2px,.5vh,6px); }
+.key-std { width:clamp(22px,3.5vw,42px); }
+.key-shift { width:clamp(38px,7vw,80px); font-size:.7rem; }
+.key-space { width:clamp(140px,40vw,400px); }
+@media (max-height:550px) { .finger-area { display:none !important; } }
+</style>
+</head>
+<body class="w-full flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden relative">
+
+<div id="ime-warning" onclick="this.classList.add('hidden')" class="hidden absolute inset-0 bg-red-900 bg-opacity-95 z-50 flex flex-col items-center justify-center text-white p-6 text-center cursor-pointer">
+  <div class="text-7xl mb-6">⚠️</div>
+  <h2 class="text-2xl sm:text-3xl font-black mb-4">日本語入力（IME）がオンになっています</h2>
+  <p class="text-lg leading-relaxed bg-black bg-opacity-30 p-4 rounded-lg border border-red-500">
+    「半角英数」モードに切り替えてください。<br>
+    Windowsは <b>半角/全角</b> キー、Macは <b>英数</b> キーです。<br>
+    切り替えたら、もう一度キーを押すと再開します。（この画面をクリックしても閉じられます）
+  </p>
+</div>
+
+<!-- Main Menu -->
+<div id="main-menu" class="bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-full overflow-y-auto border-t-8 border-blue-600">
+  <div class="w-full flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-slate-200 gap-4">
+    <h1 class="text-3xl font-black text-slate-800">学習タイピングポータル</h1>
+    <button onclick="initNewsMode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg">📰 今日のキーワード</button>
+  </div>
+  <p class="mb-6 text-slate-600 font-medium text-center">挑戦するモードを選んでください。</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+    <button onclick="switchScreen('setup-screen')" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition">
+      <div class="text-5xl mb-4">✏️</div><h2 class="text-xl font-bold text-slate-800 mb-2">カスタムモード</h2>
+      <p class="text-sm text-slate-500 text-center">好きな文章を貼り付けて<br>自動でふりがな生成</p></button>
+    <button onclick="initPatternA()" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-green-500 hover:bg-green-50 transition">
+      <div class="text-5xl mb-4">📖</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (目次)</h2>
+      <p class="text-sm text-slate-500 text-center">国語・理科・社会の<br>単元を選んで復習</p></button>
+    <button onclick="initPatternB()" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-yellow-500 hover:bg-yellow-50 transition">
+      <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
+      <p class="text-sm text-slate-500 text-center">RPG感覚で<br>ステージをクリアしよう</p></button>
+  </div>
+</div>
+
+<!-- Keyword Screen -->
+<div id="news-intro-screen" class="hidden bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col h-full max-h-full border-t-8 border-indigo-500 relative">
+  <button onclick="switchScreen('main-menu')" class="absolute top-4 right-4 text-slate-500 font-bold bg-white px-3 py-1 border rounded shadow-sm">✖ 戻る</button>
+  <div class="shrink-0 mb-6 text-center pt-4">
+    <h1 class="text-3xl font-black text-indigo-900 mb-2">今日のキーワード 🌍</h1>
+    <p class="text-slate-600 font-medium">世界の「今」を知る言葉をタイピングして学ぼう！</p>
+  </div>
+  <div class="flex-1 min-h-0 overflow-y-auto bg-white p-6 rounded-xl border-2 border-indigo-100 mb-6"><div id="news-preview" class="font-medium leading-loose text-slate-800 text-lg"></div></div>
+  <div class="shrink-0 flex justify-center"><button id="start-news-btn" class="w-full max-w-md bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg">タイピングする！</button></div>
+</div>
+
+<!-- Custom -->
+<div id="setup-screen" class="hidden bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col h-full max-h-full border-t-8 border-blue-500 relative">
+  <button onclick="switchScreen('main-menu')" class="absolute top-4 right-4 text-slate-500 font-bold bg-white px-3 py-1 border rounded shadow-sm">✖ 戻る</button>
+  <div class="shrink-0 mb-4 pt-2"><h1 class="text-2xl font-black text-slate-800">カスタム問題の設定</h1>
+    <p class="text-sm text-slate-500 mt-1">好きな文章を貼り付けてください（1行が1問）。読み仮名は自動で付きますが、間違うことがあります。</p></div>
+  <textarea id="sentences-input" class="w-full flex-1 min-h-0 border-2 border-slate-200 rounded-xl p-4 mb-6 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 resize-none text-lg" placeholder="ここに文章を入力またはペーストしてください..."></textarea>
+  <button id="start-custom-btn" class="shrink-0 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg">読み込んでスタート</button>
+</div>
+
+<!-- Pattern A -->
+<div id="pattern-a-screen" class="hidden bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-full max-h-full flex overflow-hidden border border-slate-200">
+  <div class="w-1/3 md:w-1/4 bg-slate-50 border-r border-slate-200 flex flex-col h-full overflow-y-auto shrink-0">
+    <div class="p-4 bg-slate-200 font-black text-slate-800 sticky top-0 flex justify-between items-center z-10"><span>目次</span>
+      <button onclick="switchScreen('main-menu')" class="text-xs font-bold bg-white text-slate-600 px-2 py-1 border rounded">戻る</button></div>
+    <div id="sidebar-content" class="pb-4"></div>
+  </div>
+  <div class="w-2/3 md:w-3/4 p-6 sm:p-10 flex flex-col items-center justify-center flex-1 overflow-y-auto">
+    <div id="pat-a-empty" class="text-slate-400 text-center"><div class="text-6xl mb-6">👈</div><p class="text-lg font-bold">左の目次から単元を選んでください</p></div>
+    <div id="pat-a-content" class="hidden w-full max-w-md flex flex-col my-auto bg-slate-50 p-8 rounded-2xl border border-slate-100">
+      <h2 id="pat-a-title" class="text-2xl font-black text-slate-800 mb-6 text-center"></h2>
+      <label class="block text-sm font-bold text-slate-600 mb-2">出題する長さ</label>
+      <select id="pat-a-length" class="w-full mb-6 p-3 border-2 border-slate-200 rounded-xl"><option value="60">ショート (約60文字)</option><option value="150" selected>スタンダード (約150文字)</option><option value="ALL">全文マスター</option></select>
+      <label class="flex items-center text-sm font-bold text-slate-700 cursor-pointer bg-white p-4 rounded-xl border mb-8"><input type="checkbox" id="pat-a-random" class="mr-3 w-5 h-5 accent-blue-600">文章をランダムにシャッフルする</label>
+      <button id="pat-a-start-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg">タイピング開始！</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern B -->
+<div id="pattern-b-screen" class="hidden bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col h-full max-h-full relative border-t-8 border-yellow-500">
+  <button onclick="switchScreen('main-menu')" class="absolute top-4 right-4 text-slate-500 font-bold bg-white px-4 py-2 border rounded-lg z-10">✖ トップへ戻る</button>
+  <div id="pat-b-step1" class="flex flex-col h-full w-full min-h-0 pt-4">
+    <h1 class="text-3xl font-black mb-8 text-slate-800 text-center shrink-0">ワールド選択</h1>
+    <div class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6 p-2 pb-8" id="pat-b-subjects"></div>
+  </div>
+  <div id="pat-b-step2" class="hidden flex flex-col h-full w-full min-h-0 pt-4">
+    <div class="shrink-0 mb-6"><button onclick="document.getElementById('pat-b-step2').classList.add('hidden');document.getElementById('pat-b-step1').classList.remove('hidden');" class="text-slate-600 font-bold text-lg bg-white px-4 py-2 rounded-lg border">◀ ワールド選択へ戻る</button></div>
+    <h1 id="pat-b-subject-title" class="text-3xl font-black mb-6 text-slate-800 shrink-0"></h1>
+    <div class="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 pb-8" id="pat-b-units"></div>
+  </div>
+</div>
+<div id="pat-b-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-40 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full relative">
+    <button onclick="document.getElementById('pat-b-modal').classList.add('hidden')" class="absolute top-4 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold">✖</button>
+    <h2 id="pat-b-modal-title" class="text-2xl font-black text-slate-800 mb-6 text-center border-b-2 pb-3"></h2>
+    <label class="block text-sm font-bold text-slate-500 mb-2">クエストの長さ</label>
+    <select id="pat-b-length" class="w-full p-3 border-2 border-slate-200 rounded-xl mb-4"><option value="60">ショート (約60文字)</option><option value="150" selected>スタンダード (約150文字)</option><option value="ALL">ボス戦 (全文)</option></select>
+    <label class="flex items-center text-sm font-bold text-slate-700 mb-8 bg-slate-50 p-4 rounded-xl border cursor-pointer"><input type="checkbox" id="pat-b-random" class="mr-3 w-5 h-5 accent-yellow-500">ランダムエンカウント</label>
+    <button id="pat-b-start-btn" class="w-full text-white font-black py-4 rounded-xl shadow-lg text-xl">いざ、出発！</button>
+  </div>
+</div>
+
+<!-- Game -->
+<div id="game-screen" class="hidden bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-full max-h-full flex flex-col relative overflow-hidden border-2 border-slate-300">
+  <div class="shrink-0 flex justify-between items-center px-4 py-2 border-b-2 border-slate-200 bg-slate-100">
+    <span id="game-header-title" class="text-sm font-black text-slate-600">タイピング学習</span>
+    <div class="flex items-center gap-4">
+      <button id="hint-btn" class="text-xs font-bold bg-white border-2 border-slate-300 rounded-lg px-3 py-1 text-slate-600"></button>
+      <button id="toggle-mute-btn" class="text-xl w-8 h-8 flex items-center justify-center bg-white border rounded-full">🔊</button>
+      <button id="close-game-btn" class="border-2 border-slate-300 bg-white font-bold text-slate-600 rounded-lg px-3 py-1 text-xs">✖ 諦める</button>
+    </div>
+  </div>
+  <!-- 本文が主役。読みは「いま打つ1文字分」だけ -->
+  <div class="flex-1 min-h-0 relative bg-white border-b-4 border-slate-200 flex flex-col items-center justify-center px-6 overflow-y-auto">
+    <div id="kanji-display" class="text-center max-w-4xl font-bold" style="font-size:clamp(1.5rem,5vh,3rem);line-height:1.9;letter-spacing:.04em"></div>
+    <div class="mt-8 h-20 flex flex-col items-center justify-center">
+      <div id="now-kana" class="text-2xl font-bold text-orange-600 h-9"></div>
+      <div id="now-romaji" class="font-mono text-lg font-bold tracking-widest h-7"></div>
+    </div>
+  </div>
+  <div id="keyboard" class="shrink-0 px-1 sm:px-4 mx-auto w-full max-w-4xl flex flex-col select-none mb-1 mt-2 bg-slate-50 p-2 rounded-xl border border-slate-200"></div>
+  <div class="shrink-0 flex justify-center items-end gap-1 sm:gap-2 h-8 sm:h-12 px-2 pb-0 finger-area opacity-70" id="fingers"></div>
+</div>
+
+<!-- Result -->
+<div id="result-screen" class="hidden bg-slate-50 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col h-full overflow-hidden border-2 border-slate-200">
+  <div class="flex-none p-2 sm:p-4 border-b-2 border-slate-200 bg-white"><h2 class="text-xl sm:text-2xl font-black text-slate-800">タイピング成績表</h2></div>
+  <div class="flex-1 min-h-0 flex flex-col md:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden">
+    <div class="flex-1 overflow-y-auto border-2 border-slate-200 p-4 bg-white rounded-xl" id="result-sentences"></div>
+    <div class="w-full md:w-1/3 flex-none md:max-w-xs border-2 border-slate-200 flex flex-col bg-white rounded-xl overflow-hidden text-xs sm:text-sm">
+      <div class="flex justify-between items-center px-3 py-1.5 border-b"><span class="text-slate-500 font-bold">スコア</span><span class="text-xl sm:text-2xl font-black text-blue-600" id="res-score">0</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b bg-slate-50"><span class="text-slate-500">レベル</span><span class="font-bold text-blue-600" id="res-level">-</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b"><span class="text-slate-500">入力時間</span><span class="font-bold text-blue-600" id="res-time">-</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b"><span class="text-slate-500">入力文字数</span><span class="font-bold text-blue-600" id="res-strokes">0</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b"><span class="text-slate-500">ミス入力数</span><span class="font-bold text-blue-600" id="res-misses">0</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b"><span class="text-slate-500">打鍵/分</span><span class="font-bold text-blue-600" id="res-wpm">0</span></div>
+      <div class="flex justify-between items-center px-3 py-1 border-b"><span class="text-slate-500">正確率</span><span class="font-bold text-blue-600" id="res-accuracy">0%</span></div>
+      <div class="flex justify-between items-center px-3 py-1.5 bg-slate-50 mt-auto"><span class="text-slate-500">苦手キー</span><span class="font-bold text-red-500 tracking-widest text-base" id="res-weak-keys">-</span></div>
+    </div>
+  </div>
+  <div class="flex-none p-2 border-t-2 border-slate-200 bg-white flex flex-col gap-2">
+    <div class="text-center p-2 bg-blue-50 border border-blue-200 rounded-xl font-bold text-slate-800 text-sm" id="res-comment"></div>
+    <div class="flex flex-wrap justify-center gap-2 sm:gap-4">
+      <button id="btn-miss-only" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 sm:px-6 rounded-xl disabled:bg-slate-300 text-sm">ミスだけ再挑戦</button>
+      <button id="btn-retry" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 sm:px-10 rounded-xl text-sm">もう1回</button>
+      <button id="btn-close-result" class="bg-white border-2 border-slate-300 text-slate-700 font-bold py-2 px-6 sm:px-10 rounded-xl hover:bg-slate-100 text-sm">トップへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- 学習データ（読みは手動で設定） ----------
+const newsData = [
+ { title:"環境・SDGs", sentences:[
+  { kanji:"地球温暖化を防ぐため「再生可能エネルギー」が注目されています。", kana:"ちきゅうおんだんかをふせぐため「さいせいかのうえねるぎー」がちゅうもくされています。" },
+  { kanji:"温室効果ガスの排出を全体として実質ゼロにする「カーボンニュートラル」を目指します。", kana:"おんしつこうかがすのはいしゅつをぜんたいとしてじっしつぜろにする「かーぼんにゅーとらる」をめざします。" },
+  { kanji:"プラスチックごみを減らすなど、私たちにもできる活動がたくさんあります。", kana:"ぷらすちっくごみをへらすなど、わたしたちにもできるかつどうがたくさんあります。" } ]},
+ { title:"科学・テクノロジー", sentences:[
+  { kanji:"コンピュータが自分で学習して賢くなる「人工知能（AI）」の技術が進んでいます。", kana:"こんぴゅーたがじぶんでがくしゅうしてかしこくなる「じんこうちのう（AI）」のぎじゅつがすすんでいます。" },
+  { kanji:"文章を作ったり、絵を描いたりできる「生成AI」は生活を大きく変えるでしょう。", kana:"ぶんしょうをつくったり、えをかいたりできる「せいせいAI」はせいかつをおおきくかえるでしょう。" },
+  { kanji:"宇宙開発では、再び月に人間を送る「アルテミス計画」が進められています。", kana:"うちゅうかいはつでは、ふたたびつきににんげんをおくる「あるてみすけいかく」がすすめられています。" } ]},
+ { title:"国際・経済", sentences:[
+  { kanji:"世界中で物の値段が上がり続ける「インフレーション」が起きています。", kana:"せかいじゅうでもののねだんがあがりつづける「いんふれーしょん」がおきています。" },
+  { kanji:"原材料の調達から生産・流通・販売までの一連のつながりを「サプライチェーン」と呼びます。", kana:"げんざいりょうのちょうたつからせいさん・りゅうつう・はんばいまでのいちれんのつながりを「さぷらいちぇーん」とよびます。" },
+  { kanji:"国と国が協力して、平和で豊かな世界をつくることが求められています。", kana:"くにとくにがきょうりょくして、へいわでゆたかなせかいをつくることがもとめられています。" } ]}
+];
+const textbookData = {
+ kokugo:{ title:"国語 (小5)", color:"text-red-600", bg:"bg-red-50", btn:"bg-red-600", units:[
+  { title:"敬語の使い方", sentences:[
+   { kanji:"敬語は、相手をうやまう気持ちを表す大切な言葉づかいです。", kana:"けいごは、あいてをうやまうきもちをあらわすたいせつなことばづかいです。" },
+   { kanji:"相手の動作を高める尊敬語と、自分の動作をへりくだる謙譲語があります。", kana:"あいてのどうさをたかめるそんけいごと、じぶんのどうさをへりくだるけんじょうごがあります。" },
+   { kanji:"言葉をていねいにする丁寧語は、日常会話でよく使われます。", kana:"ことばをていねいにするていねいごは、にちじょうかいわでよくつかわれます。" } ]},
+  { title:"ことわざと慣用句", sentences:[
+   { kanji:"ことわざは、昔の人たちの知恵や教えが短い言葉に詰まったものです。", kana:"ことわざは、むかしのひとたちのちえやおしえがみじかいことばにつまったものです。" },
+   { kanji:"慣用句は、二つ以上の言葉が結びついて、特別な意味を表す言い回しです。", kana:"かんようくは、ふたついじょうのことばがむすびついて、とくべつないみをあらわすいいまわしです。" },
+   { kanji:"「猿も木から落ちる」は、得意な人でも時には失敗するという意味です。", kana:"「さるもきからおちる」は、とくいなひとでもときにはしっぱいするといういみです。" },
+   { kanji:"「馬が合う」のように、動物を使った表現がたくさんあります。", kana:"「うまがあう」のように、どうぶつをつかったひょうげんがたくさんあります。" } ]},
+  { title:"説得力のある意見文", sentences:[
+   { kanji:"意見文を書くときは、まず自分の主張をはっきりと述べることが大切です。", kana:"いけんぶんをかくときは、まずじぶんのしゅちょうをはっきりとのべることがたいせつです。" },
+   { kanji:"次に、その主張を裏付ける理由や具体的な事実を挙げます。", kana:"つぎに、そのしゅちょうをうらづけるりゆうやぐたいてきなじじつをあげます。" } ]}
+ ]},
+ rika:{ title:"理科 (小5)", color:"text-green-600", bg:"bg-green-50", btn:"bg-green-600", units:[
+  { title:"植物の発芽と成長", sentences:[
+   { kanji:"種子が発芽するには、水と空気と適当な温度の三つの条件が必要です。", kana:"しゅしがはつがするには、みずとくうきとてきとうなおんどのみっつのじょうけんがひつようです。" },
+   { kanji:"発芽した後に植物が丈夫に成長するためには、日光と肥料が重要になります。", kana:"はつがしたあとにしょくぶつがじょうぶにせいちょうするためには、にっこうとひりょうがじゅうようになります。" } ]},
+  { title:"台風と天気の変化", sentences:[
+   { kanji:"台風は、北西太平洋などで発生し、最大風速がおよそ17m/s以上に発達した熱帯低気圧です。", kana:"たいふうは、ほくせいたいへいようなどではっせいし、さいだいふうそくがおよそじゅうななめーとるまいびょういじょうにはったつしたねったいていきあつです。" },
+   { kanji:"中心には風が弱く雲のない「台風の目」と呼ばれる場所ができることがあります。", kana:"ちゅうしんにはかぜがよわくくものない「たいふうのめ」とよばれるばしょができることがあります。" } ]},
+  { title:"電磁石の性質", sentences:[
+   { kanji:"鉄の芯に導線を巻きつけて電流を流すと、磁石の働きを持ちます。", kana:"てつのしんにどうせんをまきつけてでんりゅうをながすと、じしゃくのはたらきをもちます。" },
+   { kanji:"これを電磁石といい、電流の向きを変えるとN極とS極が変わります。", kana:"これをでんじしゃくといい、でんりゅうのむきをかえるとNきょくとSきょくがかわります。" } ]}
+ ]},
+ shakai:{ title:"社会 (小5)", color:"text-yellow-600", bg:"bg-yellow-50", btn:"bg-yellow-500", units:[
+  { title:"日本の国土と気候", sentences:[
+   { kanji:"日本の国土は海に囲まれた島国で、面積の四分の三は山地や森林です。", kana:"にほんのこくどはうみにかこまれたしまぐにで、めんせきのよんぶんのさんはさんちやしんりんです。" },
+   { kanji:"季節風や海流の影響を受け、四季の変化がはっきりしているのが特徴です。", kana:"きせつふうやかいりゅうのえいきょうをうけ、しきのへんかがはっきりしているのがとくちょうです。" } ]},
+  { title:"米づくりのさかんな地域", sentences:[
+   { kanji:"日本では、昔から各地で米作りがさかんに行われています。", kana:"にほんでは、むかしからかくちでこめづくりがさかんにおこなわれています。" },
+   { kanji:"東北や北陸地方の平野部は、水が豊かで米作りに適した環境が整っています。", kana:"とうほくやほくりくちほうのへいやぶは、みずがゆたかでこめづくりにてきしたかんきょうがととのっています。" } ]},
+  { title:"日本の自動車工業", sentences:[
+   { kanji:"日本の自動車工業は、優れた技術と品質で世界中に車を輸出しています。", kana:"にほんのじどうしゃこうぎょうは、すぐれたぎじゅつとひんしつでせかいじゅうにくるまをゆしゅつしています。" },
+   { kanji:"最近では、環境にやさしい電気自動車の開発が進められています。", kana:"さいきんでは、かんきょうにやさしいでんきじどうしゃのかいはつがすすめられています。" } ]}
+ ]}
+};
+
+// ---------- 追加教材 ----------
+const ADDED_UNITS={"kokugo": [{"title": "漢字の成り立ち", "sentences": [{"kanji": "漢字には、物の形をかたどった象形文字や、印で意味を表した指事文字などがあります。", "kana": "かんじには、もののかたちをかたどったしょうけいもじや、しるしでいみをあらわしたしじもじなどがあります。"}, {"kanji": "「木」と「木」を合わせて「林」となるように、意味を組み合わせた漢字を会意文字といいます。", "kana": "「き」と「き」をあわせて「はやし」となるように、いみをくみあわせたかんじをかいいもじといいます。"}, {"kanji": "意味を表す部分と音を表す部分を合わせた漢字を、形声文字といいます。", "kana": "いみをあらわすぶぶんとおとをあらわすぶぶんをあわせたかんじを、けいせいもじといいます。"}, {"kanji": "漢字には、中国から伝わった音を表す音読みと、日本の言葉を当てた訓読みがあります。", "kana": "かんじには、ちゅうごくからつたわったおとをあらわすおんよみと、にほんのことばをあてたくんよみがあります。"}]}, {"title": "古文に親しむ", "sentences": [{"kanji": "古文とは、昔の日本で書かれた文章のことで、今の言葉とは言い方がちがう部分があります。", "kana": "こぶんとは、むかしのにほんでかかれたぶんしょうのことで、いまのことばとはいいかたがちがうぶぶんがあります。"}, {"kanji": "「平家物語」は、平氏が栄え、やがて滅びていくようすを語った軍記物語です。", "kana": "「へいけものがたり」は、へいしがさかえ、やがてほろびていくようすをかたったぐんきものがたりです。"}, {"kanji": "「枕草子」は、清少納言が自然や人々のようすを書いた随筆です。", "kana": "「まくらのそうし」は、せいしょうなごんがしぜんやひとびとのようすをかいたずいひつです。"}]}, {"title": "四字熟語", "sentences": [{"kanji": "四字熟語は、四つの漢字が組み合わさって、特別な意味を表す言葉です。", "kana": "よじじゅくごは、よっつのかんじがくみあわさって、とくべつないみをあらわすことばです。"}, {"kanji": "「一石二鳥」は、一つのことで二つの得をするという意味です。", "kana": "「いっせきにちょう」は、ひとつのことでふたつのとくをするといういみです。"}, {"kanji": "「以心伝心」は、言葉にしなくても気持ちが相手に伝わることです。", "kana": "「いしんでんしん」は、ことばにしなくてもきもちがあいてにつたわることです。"}, {"kanji": "「十人十色」は、人によって考え方や好みがちがうという意味です。", "kana": "「じゅうにんといろ」は、ひとによってかんがえかたやこのみがちがうといういみです。"}]}], "rika": [{"title": "動物のたんじょう", "sentences": [{"kanji": "メダカの雌が産んだ卵に、雄が出した精子が結びつくことを受精といいます。", "kana": "めだかのめすがうんだたまごに、おすがだしたせいしがむすびつくことをじゅせいといいます。"}, {"kanji": "受精した卵は、日がたつにつれて、中で体のつくりが少しずつできていきます。", "kana": "じゅせいしたたまごは、ひがたつにつれて、なかでからだのつくりがすこしずつできていきます。"}, {"kanji": "卵の中の養分を使って育ち、約十一日たつと子メダカがふ化します。", "kana": "たまごのなかのようぶんをつかってそだち、やくじゅういちにちたつとこめだかがふかします。"}, {"kanji": "人は、母親の体内で約三十八週間育ってから生まれます。", "kana": "ひとは、ははおやのたいないでやくさんじゅうはっしゅうかんそだってからうまれます。"}]}, {"title": "流れる水のはたらき", "sentences": [{"kanji": "流れる水には、地面をけずる侵食、土を運ぶ運搬、積もらせる堆積のはたらきがあります。", "kana": "ながれるみずには、じめんをけずるしんしょく、つちをはこぶうんぱん、つもらせるたいせきのはたらきがあります。"}, {"kanji": "川の上流では、流れが速く、谷が深くけずられてV字谷ができます。", "kana": "かわのじょうりゅうでは、ながれがはやく、たにがふかくけずられてVじだにができます。"}, {"kanji": "川の下流では、運ばれてきた土が積もり、広い平野や三角州ができます。", "kana": "かわのかりゅうでは、はこばれてきたつちがつもり、ひろいへいややさんかくすができます。"}, {"kanji": "大雨で川の水が増えると、水の力が強くなり、洪水が起こることがあります。", "kana": "おおあめでかわのみずがふえると、みずのちからがつよくなり、こうずいがおこることがあります。"}]}, {"title": "ものの溶け方", "sentences": [{"kanji": "物が水に溶けて、すき通った液になることを、溶けるといいます。", "kana": "ものがみずにとけて、すきとおったえきになることを、とけるといいます。"}, {"kanji": "物が水に溶ける量には限りがあり、水の温度によって変わります。", "kana": "ものがみずにとけるりょうにはかぎりがあり、みずのおんどによってかわります。"}, {"kanji": "食塩は水の温度が変わっても溶ける量があまり変わりませんが、ミョウバンは温度が高いほどたくさん溶けます。", "kana": "しょくえんはみずのおんどがかわってもとけるりょうがあまりかわりませんが、みょうばんはおんどがたかいほどたくさんとけます。"}, {"kanji": "溶け残りを取り除くには、ろ紙を使ってろ過をします。", "kana": "とけのこりをとりのぞくには、ろしをつかってろかをします。"}]}], "shakai": [{"title": "水産業のさかんな地域", "sentences": [{"kanji": "日本の近海には、暖流と寒流がぶつかる潮目があり、魚がたくさん集まります。", "kana": "にほんのきんかいには、だんりゅうとかんりゅうがぶつかるしおめがあり、さかながたくさんあつまります。"}, {"kanji": "魚をとる漁業には、沖合漁業や遠洋漁業のほかに、魚や貝を育てる養殖業もあります。", "kana": "さかなをとるぎょぎょうには、おきあいぎょぎょうやえんようぎょぎょうのほかに、さかなやかいをそだてるようしょくぎょうもあります。"}, {"kanji": "魚のとりすぎなどで資源が減ることが、日本の漁業の課題になっています。", "kana": "さかなのとりすぎなどでしげんがへることが、にほんのぎょぎょうのかだいになっています。"}]}, {"title": "情報を伝える人々", "sentences": [{"kanji": "テレビや新聞、インターネットなどを通して、たくさんの人に情報を伝えるしくみをマスメディアといいます。", "kana": "てれびやしんぶん、いんたーねっとなどをとおして、たくさんのひとにじょうほうをつたえるしくみをますめでぃあといいます。"}, {"kanji": "ニュースをつくる人たちは、正確さと速さを大切にしながら、取材を重ねて情報を伝えています。", "kana": "にゅーすをつくるひとたちは、せいかくさとはやさをたいせつにしながら、しゅざいをかさねてじょうほうをつたえています。"}, {"kanji": "情報を受け取るときは、それが正しいかどうかを自分で考えて判断することが大切です。", "kana": "じょうほうをうけとるときは、それがただしいかどうかをじぶんでかんがえてはんだんすることがたいせつです。"}]}, {"title": "自然災害と防災", "sentences": [{"kanji": "日本は地震や津波、台風、大雨などの自然災害が多い国です。", "kana": "にほんはじしんやつなみ、たいふう、おおあめなどのしぜんさいがいがおおいくにです。"}, {"kanji": "国や都道府県、市町村は、ハザードマップをつくって、地域の危険な場所を知らせています。", "kana": "くにやとどうふけん、しちょうそんは、はざーどまっぷをつくって、ちいきのきけんなばしょをしらせています。"}, {"kanji": "日ごろから避難場所や避難経路を確認し、家族で防災について話し合っておくことが大切です。", "kana": "ひごろからひなんばしょやひなんけいろをかくにんし、かぞくでぼうさいについてはなしあっておくことがたいせつです。"}]}]};
+Object.keys(ADDED_UNITS).forEach(k=>textbookData[k].units.push(...ADDED_UNITS[k]));
+
+// ---------- ローマ字表 ----------
+const multiRomajiMap = {
+ 'あ':['A'],'い':['I'],'う':['U','WU'],'え':['E'],'お':['O'],
+ 'か':['KA','CA'],'き':['KI'],'く':['KU','CU','QU'],'け':['KE'],'こ':['KO','CO'],
+ 'さ':['SA'],'し':['SI','SHI','CI'],'す':['SU'],'せ':['SE','CE'],'そ':['SO'],
+ 'た':['TA'],'ち':['TI','CHI'],'つ':['TU','TSU'],'て':['TE'],'と':['TO'],
+ 'な':['NA'],'に':['NI'],'ぬ':['NU'],'ね':['NE'],'の':['NO'],
+ 'は':['HA'],'ひ':['HI'],'ふ':['HU','FU'],'へ':['HE'],'ほ':['HO'],
+ 'ま':['MA'],'み':['MI'],'む':['MU'],'め':['ME'],'も':['MO'],
+ 'や':['YA'],'ゆ':['YU'],'よ':['YO'],
+ 'ら':['RA'],'り':['RI'],'る':['RU'],'れ':['RE'],'ろ':['RO'],
+ 'わ':['WA'],'を':['WO'],'ん':['NN','N'],
+ 'が':['GA'],'ぎ':['GI'],'ぐ':['GU'],'げ':['GE'],'ご':['GO'],
+ 'ざ':['ZA'],'じ':['ZI','JI'],'ず':['ZU'],'ぜ':['ZE'],'ぞ':['ZO'],
+ 'だ':['DA'],'ぢ':['DI'],'づ':['DU'],'で':['DE'],'ど':['DO'],
+ 'ば':['BA'],'び':['BI'],'ぶ':['BU'],'べ':['BE'],'ぼ':['BO'],
+ 'ぱ':['PA'],'ぴ':['PI'],'ぷ':['PU'],'ぺ':['PE'],'ぽ':['PO'],
+ 'きゃ':['KYA'],'きゅ':['KYU'],'きょ':['KYO'],'しゃ':['SYA','SHA'],'しゅ':['SYU','SHU'],'しょ':['SYO','SHO'],
+ 'ちゃ':['TYA','CHA'],'ちゅ':['TYU','CHU'],'ちょ':['TYO','CHO'],'にゃ':['NYA'],'にゅ':['NYU'],'にょ':['NYO'],
+ 'ひゃ':['HYA'],'ひゅ':['HYU'],'ひょ':['HYO'],'みゃ':['MYA'],'みゅ':['MYU'],'みょ':['MYO'],
+ 'りゃ':['RYA'],'りゅ':['RYU'],'りょ':['RYO'],'ぎゃ':['GYA'],'ぎゅ':['GYU'],'ぎょ':['GYO'],
+ 'じゃ':['ZYA','JA','JYA'],'じゅ':['ZYU','JU','JYU'],'じょ':['ZYO','JO','JYO'],
+ 'びゃ':['BYA'],'びゅ':['BYU'],'びょ':['BYO'],'ぴゃ':['PYA'],'ぴゅ':['PYU'],'ぴょ':['PYO'],
+ 'ふぁ':['FA','FWA'],'ふぃ':['FI','FWI'],'ふぇ':['FE','FWE'],'ふぉ':['FO','FWO'],
+ 'てぃ':['THI','TEI'],'でぃ':['DHI','DEI'],'じぇ':['ZYE','JE','JYE'],'ちぇ':['TYE','CHE'],
+ 'ぁ':['XA','LA'],'ぃ':['XI','LI'],'ぅ':['XU','LU'],'ぇ':['XE','LE'],'ぉ':['XO','LO'],
+ 'ゃ':['XYA','LYA'],'ゅ':['XYU','LYU'],'ょ':['XYO','LYO'],'ー':['-'],
+ '、':[','],'。':['.'],'！':['!'],'？':['?'],'「':['['],'」':[']'],'・':['/'],'：':[':'],'；':[';'],
+ ' ':[' '],'　':[' '],'/':['/'],'-':['-'],',':[','],'.':['.'],'!':['!'],'?':['?']
+};
+const skipChars = ['\n','\t','（','）','(',')'];   // 括弧はShiftが必要なので打たずに飛ばす
+const SHIFT_BASE = { '!':'1', '?':'/' };            // Shiftが要る記号 → 元のキー
+const keyFingerMap = { '1':0,'Q':0,'A':0,'Z':0,'2':1,'W':1,'S':1,'X':1,'3':2,'E':2,'D':2,'C':2,'4':3,'5':3,'R':3,'T':3,'F':3,'G':3,'V':3,'B':3,' ':5,
+ '6':6,'7':6,'Y':6,'U':6,'H':6,'J':6,'N':6,'M':6,'8':7,'I':7,'K':7,',':7,'9':8,'O':8,'L':8,'.':8,'0':9,'-':9,'P':9,'@':9,'[':9,';':9,':':9,']':9,'/':9 };
+
+// ---------- 状態 ----------
+let kuroshiro=null, audioCtx=null, isMuted=false, gameTimer=null;
+let globalSentences=[], playSentences=[], missedSentencesForNextRun=[];
+let currentSentenceIndex=0, parsedNodes=[], currentNodeIndex=0, currentTypingState="";
+let isPlaying=false, startTime=0, totalTypedCount=0, missCount=0, sentenceMissed=false, currentInputHadMiss=false;
+let missedKeyCounts={}, lastGameSettings={length:'150',isRandom:false};
+const $ = id => document.getElementById(id);
+
+// ---------- キーボード生成 ----------
+(function(){
+ const kb=$('keyboard'), pads=['','pl-2 sm:pl-6','pl-4 sm:pl-10',''];
+ ['1234567890-','QWERTYUIOP@[','ASDFGHJKL;:]','ZXCVBNM,./'].forEach((row,ri)=>{
+  const d=document.createElement('div'); d.className='key-row '+pads[ri];
+  if(ri===3) d.innerHTML='<div class="key key-shift" id="key-shift-l">shift</div>';
+  [...row].forEach(c=>{ d.insertAdjacentHTML('beforeend',`<div class="key key-std" id="key-${c.toLowerCase()}">${c}</div>`); });
+  if(ri===3) d.insertAdjacentHTML('beforeend','<div class="key key-shift" id="key-shift-r">shift</div>');
+  kb.appendChild(d);
+ });
+ kb.insertAdjacentHTML('beforeend','<div class="key-row"><div class="key key-space" id="key-space">space</div></div>');
+ const hs=[5,6,8,6,4,4,6,8,6,5];
+ $('fingers').innerHTML=hs.map((h,i)=>`<div class="finger w-5 sm:w-10 ${i===4?'mr-3 sm:mr-8':''} ${i===5?'ml-3 sm:ml-8':''}" style="height:${h*.25+.5}rem" id="finger-${i}"></div>`).join('');
+})();
+
+// ---------- UI ----------
+function switchScreen(id){
+ ['news-intro-screen','main-menu','setup-screen','pattern-a-screen','pattern-b-screen','game-screen','result-screen'].forEach(s=>$(s).classList.add('hidden'));
+ $(id).classList.remove('hidden');
+}
+$('toggle-mute-btn').addEventListener('click',e=>{ isMuted=!isMuted; e.target.textContent=isMuted?'🔇':'🔊'; });
+function initAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
+function playErrorSound(){
+ if(isMuted||!audioCtx) return;
+ try{ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=180; g.gain.value=.08; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.1); }catch(e){}
+}
+function flashError(){ const g=$('game-screen'); g.classList.remove('flash-error'); void g.offsetWidth; g.classList.add('flash-error'); }
+
+// ---------- パーサ ----------
+function getNextKanaBlock(s,idx){
+ if(idx>=s.length) return null;
+ const d=s.substring(idx,idx+2); if(d.length===2&&multiRomajiMap[d]) return {kana:d,patterns:multiRomajiMap[d],len:2};
+ if(multiRomajiMap[s[idx]]) return {kana:s[idx],patterns:multiRomajiMap[s[idx]],len:1};
+ return null;
+}
+function parseKanaSentence(kanaStr){
+ const p=kanaStr.replace(/[\u30a1-\u30f6]/g,m=>String.fromCharCode(m.charCodeAt(0)-0x60)).replace(/[Ａ-Ｚａ-ｚ０-９]/g,s=>String.fromCharCode(s.charCodeAt(0)-0xFEE0));
+ const nodes=[]; let i=0;
+ while(i<p.length){
+  const c=p[i];
+  if(skipChars.includes(c)){ nodes.push({type:'skip',kana:c,romajiPatterns:[c],display:''}); i++; continue; }
+  if(/[a-zA-Z0-9]/.test(c)){ nodes.push({type:'char',kana:c,romajiPatterns:[c.toUpperCase()],display:c.toUpperCase()}); i++; continue; }
+  if(c==='っ'){
+   const np=getNextKanaBlock(p,i+1), base=['XTU','LTU','XTSU','LTSU'], dbl=[];
+   if(np) np.patterns.forEach(pt=>{ if(/[KSTHMRWGZBDPJCFV]/.test(pt[0])&&!dbl.includes(pt[0])) dbl.push(pt[0]); });
+   const pats=[...dbl,...base];
+   nodes.push({type:'char',kana:'っ',romajiPatterns:pats,display:pats[0]}); i++; continue;
+  }
+  const b=getNextKanaBlock(p,i);
+  if(b){ nodes.push({type:'char',kana:b.kana,romajiPatterns:b.patterns,display:b.patterns[0]}); i+=b.len; }
+  else { nodes.push({type:'skip',kana:c,romajiPatterns:[c],display:'',unsupported:!/\s/.test(c)}); i++; }
+ }
+ return nodes;
+}
+
+// ---------- ゲーム準備 ----------
+async function prepareAndStartCustomGame(lines,btn){
+ initAudio(); const ot=btn.textContent; btn.disabled=true; btn.textContent='読み込み中...';
+ try{
+  if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
+  globalSentences=[]; const bad=new Set();
+  for(const l of lines){
+   const k=await kuroshiro.convert(l,{to:"hiragana"}), n=parseKanaSentence(k);
+   n.forEach(x=>{ if(x.unsupported) bad.add(x.kana); });
+   if(n.some(x=>x.type==='char')) globalSentences.push({kanji:l,kana:k,nodes:n});
+  }
+  if(!globalSentences.length) throw new Error('empty');
+  lastGameSettings={length:'ALL',isRandom:false};
+  if(bad.size) alert('打てない文字は飛ばします： '+[...bad].join(' '));
+  startGame([...globalSentences]);
+ }catch(e){ alert('辞書の読み込みに失敗しました。ネットワーク接続を確認してください。'); }
+ finally{ btn.disabled=false; btn.textContent=ot; }
+}
+async function prepareAndStartPresetGame(objs,len,rnd){
+ initAudio(); globalSentences=[];
+ try{
+  for(const o of objs){
+   let kana=o.kana;
+   if(!kana){
+    if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
+    kana=await kuroshiro.convert(o.kanji,{to:"hiragana"});
+   }
+   const n=parseKanaSentence(kana); if(n.some(x=>x.type==='char')) globalSentences.push({kanji:o.kanji,kana,nodes:n});
+  }
+ }catch(e){ alert('読み仮名の準備に失敗しました。ネットワーク接続を確認してください。'); return; }
+ lastGameSettings={length:len,isRandom:rnd}; startGame(extractPreset(globalSentences,len,rnd));
+}
+function extractPreset(arr,len,rnd){
+ const res=[...arr]; if(rnd) res.sort(()=>Math.random()-.5);
+ const sel=[]; let c=0;
+ for(const a of res){ sel.push(a); c+=a.kanji.length; if(len!=='ALL'&&c>=parseInt(len)) break; }
+ return sel;
+}
+$('start-custom-btn').addEventListener('click',e=>{
+ const lines=$('sentences-input').value.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+ if(lines.length) prepareAndStartCustomGame(lines,e.target);
+});
+
+// ---------- メニュー ----------
+let patAUnit=null, patBUnit=null;
+function initPatternA(){
+ switchScreen('pattern-a-screen'); const sc=$('sidebar-content'); sc.innerHTML='';
+ Object.values(textbookData).forEach(subj=>{
+  const h=document.createElement('div'); h.className=`p-3 font-bold bg-white border-y mt-2 ${subj.color}`; h.textContent=subj.title; sc.appendChild(h);
+  subj.units.forEach(u=>{
+   const b=document.createElement('button'); b.className='w-full text-left p-4 pl-6 text-sm text-slate-700 hover:bg-blue-50 border-b font-medium'; b.textContent=u.title;
+   b.onclick=()=>{
+    sc.querySelectorAll('button').forEach(x=>x.classList.remove('bg-blue-100','font-bold','text-blue-800'));
+    b.classList.add('bg-blue-100','font-bold','text-blue-800'); patAUnit=u;
+    $('pat-a-empty').classList.add('hidden'); $('pat-a-content').classList.remove('hidden'); $('pat-a-title').textContent=u.title;
+   };
+   sc.appendChild(b);
+  });
+ });
+}
+$('pat-a-start-btn').addEventListener('click',()=>{
+ if(!patAUnit) return; $('game-header-title').textContent=`教科書: ${patAUnit.title}`;
+ prepareAndStartPresetGame(patAUnit.sentences,$('pat-a-length').value,$('pat-a-random').checked);
+});
+function initPatternB(){
+ switchScreen('pattern-b-screen'); $('pat-b-step1').classList.remove('hidden'); $('pat-b-step2').classList.add('hidden');
+ const c=$('pat-b-subjects'); c.innerHTML='';
+ Object.values(textbookData).forEach(subj=>{
+  const b=document.createElement('button'); b.className=`p-8 rounded-2xl shadow-md border-2 border-transparent hover:border-slate-300 ${subj.bg} ${subj.color}`;
+  b.innerHTML=`<div class="text-3xl font-black">${subj.title}</div>`;
+  b.onclick=()=>{
+   $('pat-b-step1').classList.add('hidden'); $('pat-b-step2').classList.remove('hidden'); $('pat-b-subject-title').textContent=subj.title;
+   const uc=$('pat-b-units'); uc.innerHTML='';
+   subj.units.forEach(u=>{
+    const ub=document.createElement('button'); ub.className='p-6 bg-white border-2 border-slate-200 rounded-2xl text-left hover:border-yellow-400';
+    ub.innerHTML=`<div class="font-bold text-lg text-slate-700">${u.title}</div>`;
+    ub.onclick=()=>{ patBUnit=u; $('pat-b-modal-title').textContent=u.title; $('pat-b-modal').classList.remove('hidden'); $('pat-b-start-btn').className=`w-full text-white font-black py-4 rounded-xl shadow-lg text-xl ${subj.btn}`; };
+    uc.appendChild(ub);
+   });
+  };
+  c.appendChild(b);
+ });
+}
+$('pat-b-start-btn').addEventListener('click',()=>{
+ $('game-header-title').textContent=`クエスト: ${patBUnit.title}`;
+ prepareAndStartPresetGame(patBUnit.sentences,$('pat-b-length').value,$('pat-b-random').checked);
+ $('pat-b-modal').classList.add('hidden');
+});
+let newsPack=newsData, newsUpdated='';
+async function loadNewsPack(){
+ try{
+  const r=await fetch('news.json',{cache:'no-store'}); if(!r.ok) throw new Error(r.status);
+  const j=await r.json(); const items=(j.items||[]).filter(i=>i.sentences&&i.sentences.length);
+  if(items.length){ newsPack=items; newsUpdated=j.updated||''; }
+ }catch(e){ /* ファイルを直接開いた場合や未配置の場合は内蔵データを使う */ }
+}
+function initNewsMode(){
+ switchScreen('news-intro-screen'); const rn=newsPack[Math.floor(Math.random()*newsPack.length)];
+ const when=rn.date||newsUpdated;
+ $('news-preview').innerHTML=`<span class="font-black text-indigo-700 text-xl">【${rn.title}】</span>`+(when?`<span class="ml-2 text-sm text-slate-400">${when}</span>`:'')+'<br><br>'+rn.sentences.map(s=>s.kanji).join('<br>');
+ $('start-news-btn').onclick=()=>{ $('game-header-title').textContent=`キーワード: ${rn.title}`; prepareAndStartPresetGame(rn.sentences,'ALL',false); };
+}
+window.addEventListener('DOMContentLoaded',()=>{ switchScreen('main-menu'); loadNewsPack(); });
+
+// ---------- ゲーム本体 ----------
+function startGame(sentences){
+ playSentences=sentences.map(s=>({...s,log:[]})); switchScreen('game-screen');
+ totalTypedCount=0; missCount=0; currentSentenceIndex=0; missedSentencesForNextRun=[]; missedKeyCounts={};
+ applyHintLevel(); isPlaying=true; startTime=Date.now(); clearTimeout(gameTimer); loadSentence();
+}
+let hintLevel=0, showHint=false, kanjiMap=null;
+try{ hintLevel=parseInt(localStorage.getItem('hintLevel'))||0; }catch(e){}
+const HINT_LABELS=['ヒント：読み＋キー','ヒント：キーだけ','ヒント：なし'];
+function applyHintLevel(){
+ $('hint-btn').textContent=HINT_LABELS[hintLevel];
+ $('keyboard').classList.toggle('hidden',hintLevel===2);
+ $('fingers').classList.toggle('hidden',hintLevel===2);
+}
+$('hint-btn').addEventListener('click',()=>{ hintLevel=(hintLevel+1)%3; try{localStorage.setItem('hintLevel',hintLevel);}catch(x){} applyHintLevel(); if(isPlaying) updateHighlighting(); });
+document.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) b.blur(); });  // スペースキーでボタンが反応しないように
+// 本文の句読点・かぎ括弧を目印に、かなの進み具合を本文上の位置へ対応づける
+const DELIM='、。・「」（）！？!?';
+function buildKanjiMap(chars,nodes){
+ const kA=[0], nA=[0];
+ chars.forEach((c,i)=>{ if(DELIM.includes(c)) kA.push(i+1); });
+ nodes.forEach((n,i)=>{ if(n.kana.length===1&&DELIM.includes(n.kana)) nA.push(i+1); });
+ if(kA.length!==nA.length) return null;
+ kA.push(chars.length); nA.push(nodes.length); return {kA,nA};
+}
+function kanjiPos(L){
+ const n=currentNodeIndex, N=parsedNodes.length;
+ if(n>=N) return L;
+ if(!kanjiMap) return Math.floor(n/N*L);
+ const m=kanjiMap;
+ for(let i=0;i<m.nA.length-1;i++) if(n>=m.nA[i]&&n<m.nA[i+1]){ const f=(n-m.nA[i])/(m.nA[i+1]-m.nA[i]); return m.kA[i]+Math.floor(f*(m.kA[i+1]-m.kA[i])); }
+ return L;
+}
+function loadSentence(){
+ if(!isPlaying) return;
+ if(currentSentenceIndex>=playSentences.length){ finishGame(); return; }
+ const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false;
+ const kd=$('kanji-display'); kd.innerHTML='';
+ const chars=Array.from(s.kanji);
+ chars.forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; kd.appendChild(sp); });
+ kanjiMap=buildKanjiMap(chars,parsedNodes);
+ skipNonTypableNodes();
+}
+function skipNonTypableNodes(){
+ while(currentNodeIndex<parsedNodes.length&&parsedNodes[currentNodeIndex].type==='skip') currentNodeIndex++;
+ updateHighlighting();
+ if(currentNodeIndex>=parsedNodes.length){
+  if(sentenceMissed) missedSentencesForNextRun.push(playSentences[currentSentenceIndex]);
+  gameTimer=setTimeout(()=>{ if(!isPlaying) return; currentSentenceIndex++; loadSentence(); },200);
+ }
+}
+function updateHighlighting(){
+ const kc=$('kanji-display').children, L=kc.length, pos=kanjiPos(L), fin=currentNodeIndex>=parsedNodes.length;
+ for(let i=0;i<L;i++) kc[i].className=i<pos?'text-slate-400':(i===pos&&!fin)?'text-orange-600 underline decoration-4 underline-offset-8 decoration-orange-400':'text-slate-800';
+ const nk=$('now-kana'), nr=$('now-romaji'); nk.textContent=''; nr.textContent='';
+ if(!fin&&(hintLevel===0||showHint)){
+  const n=parsedNodes[currentNodeIndex], vp=n.romajiPatterns.filter(p=>p.startsWith(currentTypingState)), d=vp.length?vp[0]:n.display;
+  nk.textContent=n.kana;
+  const a=document.createElement('span'); a.className='text-slate-300'; a.textContent=currentTypingState;
+  const b=document.createElement('span'); b.className='text-orange-500'; b.textContent=d.substring(currentTypingState.length);
+  nr.append(a,b);
+ }
+ // キーボードガイド
+ document.querySelectorAll('.key.active,.finger.active').forEach(e=>e.classList.remove('active'));
+ if(currentNodeIndex<parsedNodes.length){
+  const n=parsedNodes[currentNodeIndex], vp=n.romajiPatterns.filter(p=>p.startsWith(currentTypingState));
+  // 1打目は画面に表示しているパターンのキーだけ光らせる
+  const chars=currentTypingState?[...new Set(vp.map(p=>p[currentTypingState.length]))]:[(vp.includes(n.display)?n.display:vp[0])[0]];
+  chars.forEach(c=>{
+   if(!c) return;
+   const base=SHIFT_BASE[c]||c, kEl=$(base===' '?'key-space':`key-${base.toLowerCase()}`); if(kEl) kEl.classList.add('active');
+   const f=$(`finger-${keyFingerMap[base.toUpperCase()]}`); if(f) f.classList.add('active');
+   if(SHIFT_BASE[c]){ const left=keyFingerMap[base.toUpperCase()]>=5; const sh=$(left?'key-shift-l':'key-shift-r'); if(sh) sh.classList.add('active'); }
+  });
+ }
+}
+function advance(){ currentNodeIndex++; currentTypingState=""; skipNonTypableNodes(); }
+function canAcceptEarly(node){
+ if(node.kana!=='ん') return true;
+ let j=currentNodeIndex+1; while(j<parsedNodes.length&&parsedNodes[j].type==='skip') j++;
+ if(j>=parsedNodes.length) return false;                       // 文末のんは NN
+ return !parsedNodes[j].romajiPatterns.some(p=>'NYAIUEO'.includes(p[0])); // な行・や行・母音の前は NN
+}
+function handleKey(key){
+ if(currentNodeIndex>=parsedNodes.length) return;
+ const node=parsedNodes[currentNodeIndex], input=/^[a-z]$/i.test(key)?key.toUpperCase():key, test=currentTypingState+input;
+ const matches=node.romajiPatterns.filter(p=>p.startsWith(test));
+ if(matches.length){
+  playSentences[currentSentenceIndex].log.push({char:input,miss:currentInputHadMiss}); currentInputHadMiss=false;
+  currentTypingState=test; totalTypedCount++; showHint=false;
+  if(matches.includes(test)&&!matches.some(p=>p.length>test.length)) advance(); else updateHighlighting();
+  return;
+ }
+ if(currentTypingState&&node.romajiPatterns.includes(currentTypingState)&&canAcceptEarly(node)){ advance(); handleKey(key); return; }
+ currentInputHadMiss=true; showHint=true; missCount++; sentenceMissed=true; playErrorSound(); flashError();
+ const exp=node.romajiPatterns.filter(p=>p.startsWith(currentTypingState)).map(p=>p[currentTypingState.length]).filter(Boolean);
+ const k=exp.length?exp[0]:'-'; missedKeyCounts[k]=(missedKeyCounts[k]||0)+1; updateHighlighting();
+}
+window.addEventListener('keydown',e=>{
+ if(!isPlaying||e.metaKey||e.ctrlKey||e.altKey) return;
+ if(e.key==='Process'||e.isComposing){ $('ime-warning').classList.remove('hidden'); return; }
+ $('ime-warning').classList.add('hidden');
+ if(e.key.length!==1) return;
+ e.preventDefault(); handleKey(e.key);
+});
+
+// ---------- 結果 ----------
+function finishGame(){
+ if(!isPlaying) return; isPlaying=false; clearTimeout(gameTimer); switchScreen('result-screen');
+ const t=(Date.now()-startTime)/1000, kpm=t>0?totalTypedCount/t*60:0;
+ const acc=totalTypedCount===0?0:totalTypedCount/(totalTypedCount+missCount), sc=Math.round(kpm*Math.pow(acc,3));
+ const lvl=sc>=400?"Godhand (神)":sc>=350?"Jedi (達人)":sc>=300?"Thunder (雷)":sc>=260?"Comet (彗星)":sc>=226?"S":sc>=192?"A":sc>=141?"B":sc>=90?"C":sc>=39?"D":"E";
+ const m=Math.floor(t/60), s=Math.floor(t%60);
+ $('res-score').textContent=sc; $('res-level').textContent=lvl; $('res-time').textContent=(m>0?m+'分':'')+s+'秒';
+ $('res-strokes').textContent=totalTypedCount; $('res-misses').textContent=missCount; $('res-wpm').textContent=kpm.toFixed(1);
+ $('res-accuracy').textContent=(acc*100).toFixed(1)+'%';
+ $('res-weak-keys').textContent=Object.entries(missedKeyCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(k=>k[0]).join(' ')||'-';
+ $('res-comment').textContent=acc>=.95&&kpm>=150?"完璧だ！鬼に金棒だね！":acc>=.9?"素晴らしい！「石の上にも三年」だね！":acc>=.8?"よく頑張ったね！「千里の道も一歩から」！":"あきらめないで！間違えた所を復習しよう。";
+ const rb=$('result-sentences'); rb.innerHTML='';
+ playSentences.forEach(s=>{
+  if(!s.log.length) return;
+  const d=document.createElement('div'); d.className='mb-4 pb-3 border-b border-slate-100';
+  const kd=document.createElement('div'); kd.className='text-slate-700 font-bold mb-1 text-sm sm:text-base'; kd.textContent=s.kanji;
+  const rd=document.createElement('div'); rd.className='font-mono text-sm sm:text-base break-words tracking-widest';
+  s.log.forEach(l=>{ const sp=document.createElement('span'); sp.textContent=l.char; sp.className=l.miss?'text-red-500 font-bold':'text-slate-500'; rd.appendChild(sp); });
+  d.append(kd,rd); rb.appendChild(d);
+ });
+ $('btn-miss-only').disabled=missedSentencesForNextRun.length===0;
+}
+$('close-game-btn').addEventListener('click',()=>{ isPlaying=false; clearTimeout(gameTimer); switchScreen('main-menu'); });
+$('btn-close-result').addEventListener('click',()=>switchScreen('main-menu'));
+$('btn-retry').addEventListener('click',()=>startGame(extractPreset([...globalSentences],lastGameSettings.length,lastGameSettings.isRandom)));
+$('btn-miss-only').addEventListener('click',()=>{ if(missedSentencesForNextRun.length) startGame(missedSentencesForNextRun); });
+</script>
+</body>
+</html>
