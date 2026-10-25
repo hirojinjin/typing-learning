@@ -58,6 +58,18 @@ const items = (parsed.items || [])
   .filter(i => i.title && !BAN.test(i.title) && i.sentences.length >= 2 &&
                i.sentences.every(s => s.kanji.length >= 15 && s.kanji.length <= 90 && !/\n/.test(s.kanji) && !BAN.test(s.kanji)));
 
-if (items.length < 4) { console.error('有効な項目が少なすぎます:', items.length); process.exit(1); } // 失敗時は前回分を残す
-writeFileSync('news.json', JSON.stringify({ updated: today, items }, null, 1));
-console.log(`news.json を書き出しました（${items.length}件）`);
+// 読み仮名をここで付ける（ブラウザで辞書を読むと重くて固まるため）
+let final = items;
+try {
+  const pick = m => { const x = m.default ?? m; return x.default ?? x; };
+  const Kuroshiro = pick(await import('kuroshiro'));
+  const Analyzer = pick(await import('kuroshiro-analyzer-kuromoji'));
+  const k = new Kuroshiro(); await k.init(new Analyzer());
+  for (const it of items) for (const s of it.sentences) s.kana = await k.convert(s.kanji, { to: 'hiragana' });
+  final = items.filter(it => it.sentences.every(s => !/[\u4e00-\u9fff]/.test(s.kana))); // 読めなかった漢字が残る項目は除く
+  console.log('読み仮名を付けました');
+} catch (e) { console.warn('読み仮名の付与に失敗（アプリ側で変換します）:', e.message); }
+
+if (final.length < 4) { console.error('有効な項目が少なすぎます:', final.length); process.exit(1); } // 失敗時は前回分を残す
+writeFileSync('news.json', JSON.stringify({ updated: today, items: final }, null, 1));
+console.log(`news.json を書き出しました（${final.length}件）`);
