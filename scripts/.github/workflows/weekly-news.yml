@@ -1,1 +1,39 @@
+name: weekly-news
 
+on:
+  schedule:
+    - cron: '0 21 * * 0'     # 毎週月曜 朝6時（日本時間）
+  workflow_dispatch:          # 手動実行ボタン
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.dep.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 今週のニュースを生成
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/generate-news.mjs
+      - name: 公開用ファイルをまとめる
+        run: mkdir site && cp index.html news.json site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: dep
+        uses: actions/deploy-pages@v4
