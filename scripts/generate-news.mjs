@@ -15,27 +15,39 @@ const prompt = `今日は${today}です。直近1週間ほどの日本と世界�
 形式: {"items":[{"title":"分野と話題の短い題名","sentences":["…","…"]}]}`;
 
 const messages = [{ role: 'user', content: prompt }];
-let data;
-for (let i = 0; i < 3; i++) {                       // 検索が長引いた場合は続きを依頼
+async function call(extra = {}) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-haiku-5-5', max_tokens: 6000,
+      model: 'claude-haiku-5-5', max_tokens: 8000,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
-      messages,
+      messages, ...extra,
     }),
   });
   if (!res.ok) { console.error('API error', res.status, await res.text()); process.exit(1); }
-  data = await res.json();
+  return res.json();
+}
+const textOf = d => d.content.filter(b => b.type === 'text').map(b => b.text).join('');
+const report = d => console.log('stop_reason:', d.stop_reason, '| blocks:', d.content.map(b => b.type).join(','), '| usage:', JSON.stringify(d.usage));
+
+let data, allText = '';
+for (let i = 0; i < 6; i++) {                       // 検索が長引いた場合は続きを依頼
+  data = await call(); report(data); allText += textOf(data);
   if (data.stop_reason !== 'pause_turn') break;
   messages.push({ role: 'assistant', content: data.content });
 }
-
-const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+let found = allText.match(/\{[\s\S]*\}/);
+if (!found) {                                       // 文章が空だった場合：検索なしでJSONだけ書かせる
+  console.log('文章が空だったため、JSONの出力を追加で依頼します');
+  if (data.content.length) messages.push({ role: 'assistant', content: data.content });
+  messages.push({ role: 'user', content: '検索で分かった事実だけをもとに、指定の形式のJSONだけを今すぐ出力してください。' });
+  data = await call({ tool_choice: { type: 'none' } }); report(data);
+  allText = textOf(data); found = allText.match(/\{[\s\S]*\}/);
+}
 let parsed;
-try { parsed = JSON.parse(text.match(/\{[\s\S]*\}/)[0]); }
-catch (e) { console.error('JSONを読み取れませんでした:\n', text.slice(0, 500)); process.exit(1); }
+try { parsed = JSON.parse(found[0]); }
+catch (e) { console.error('JSONを読み取れませんでした:\n', allText.slice(0, 800)); process.exit(1); }
 
 // 検査：怖い話題や不自然な文を落とす
 const BAN = /殺|死亡|死者|遺体|暴行|逮捕|容疑|テロ|戦死|虐待|性的|自殺|爆発|銃/;
