@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: 読み仮名用ライブラリを入れる
+        run: npm install --no-save kuroshiro kuroshiro-analyzer-kuromoji
       - name: 今週のニュースを生成
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
