@@ -1,6 +1,27 @@
 // 週1回、子ども向けニュース10件を生成して news.json に書き出す（Node 20 / 追加ライブラリなし）
 import { writeFileSync } from 'node:fs';
 
+// ---------- 読みの補正（日付・年・人数・よく間違える言葉）----------
+// 自動変換が間違えやすい読みを、先にひらがなにしてから変換にかけます。
+// 足したい言葉は READING_WORDS に ['漢字','よみ'] を1行ずつ足せば直ります（長い言葉を先に書く）。
+const READING_WORDS=[['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな']];
+const DAY_READ={1:'ついたち',2:'ふつか',3:'みっか',4:'よっか',5:'いつか',6:'むいか',7:'なのか',8:'ようか',9:'ここのか',10:'とおか',14:'じゅうよっか',17:'じゅうしちにち',19:'じゅうくにち',20:'はつか',24:'にじゅうよっか',27:'にじゅうしちにち',29:'にじゅうくにち'};
+const KN={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+function kanjiNum(t){ const m=t.match(/^(?:([二三])?十([一二三四五六七八九])?|([一二三四五六七八九]))$/); if(!m) return 0; if(m[3]) return KN[m[3]]; return (m[1]?KN[m[1]]:1)*10+(m[2]?KN[m[2]]:0); }
+function numKana(v){
+ const D=['','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'], T=['','せん','にせん','さんぜん','よんせん','ごせん','ろくせん','ななせん','はっせん','きゅうせん'],
+  H=['','ひゃく','にひゃく','さんびゃく','よんひゃく','ごひゃく','ろっぴゃく','ななひゃく','はっぴゃく','きゅうひゃく'], J=['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう','ろくじゅう','ななじゅう','はちじゅう','きゅうじゅう'];
+ const o=v%10, one={4:'よ',7:'なな',9:'く'}[o]||D[o];   // 〜よねん・〜くねん
+ return T[Math.floor(v/1000)]+H[Math.floor(v/100)%10]+J[Math.floor(v/10)%10]+one;
+}
+function fixReadings(t){
+ READING_WORDS.forEach(([k,r])=>{ t=t.split(k).join(r); });
+ t=t.replace(/([〇一二三四五六七八九]{4})年(度|間)?/g,(a,y,sf)=>numKana(parseInt([...y].map(c=>c==='〇'?0:KN[c]).join(''),10))+'ねん'+(sf==='度'?'ど':sf==='間'?'かん':''));
+ t=t.replace(/(月)?((?:[二三])?十[一二三四五六七八九]?|[一二三四五六七八九])日(間|目)?/g,(a,mo,num,sf)=>{ const n=kanjiNum(num); if(!n||(n===1&&!mo)||!DAY_READ[n]) return a; return (mo||'')+DAY_READ[n]+(sf==='間'?'かん':sf==='目'?'め':''); });
+ t=t.replace(/(^|[^一二三四五六七八九十百千])([一二])人/g,(a,p,c)=>p+(c==='一'?'ひとり':'ふたり'));
+ return t;
+}
+
 const KEY = process.env.ANTHROPIC_API_KEY;
 if (!KEY) { console.error('ANTHROPIC_API_KEY がありません'); process.exit(1); }
 
@@ -65,7 +86,7 @@ try {
   const Kuroshiro = pick(await import('kuroshiro'));
   const Analyzer = pick(await import('kuroshiro-analyzer-kuromoji'));
   const k = new Kuroshiro(); await k.init(new Analyzer());
-  for (const it of items) for (const s of it.sentences) s.kana = await k.convert(s.kanji, { to: 'hiragana' });
+  for (const it of items) for (const s of it.sentences) s.kana = await k.convert(fixReadings(s.kanji), { to: 'hiragana' });
   final = items.filter(it => it.sentences.every(s => !/[\u4e00-\u9fff]/.test(s.kana))); // 読めなかった漢字が残る項目は除く
   console.log('読み仮名を付けました');
 } catch (e) { console.warn('読み仮名の付与に失敗（アプリ側で変換します）:', e.message); }
