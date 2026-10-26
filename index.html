@@ -463,6 +463,28 @@ function kanjiPos(L){
  for(let i=0;i<m.nA.length-1;i++) if(n>=m.nA[i]&&n<m.nA[i+1]){ const f=(n-m.nA[i])/(m.nA[i+1]-m.nA[i]); return m.kA[i]+Math.floor(f*(m.kA[i+1]-m.kA[i])); }
  return L;
 }
+// 本文の漢字のかたまりと読みを、ひらがな部分を目印に正確に対応づける
+let kanjiSeg=null, nodeOff=[0];
+function toNorm(t){ return t.replace(/[ァ-ヶ]/g,m=>String.fromCharCode(m.charCodeAt(0)-0x60)).replace(/[Ａ-Ｚａ-ｚ０-９]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xFEE0)); }
+function alignSegments(kanji,kana){
+ const K=Array.from(kanji), Kn=Array.from(toNorm(kanji)), As=toNorm(kana), A=Array.from(As);
+ const isK=c=>/[\u4e00-\u9fff々〆]/.test(c); const segs=[]; let i=0,a=0;
+ while(i<K.length){
+  if(!isK(K[i])){ if(Kn[i]!==A[a]) return null; segs.push({k0:i,k1:i+1,a0:a,a1:a+1}); i++; a++; continue; }
+  let j=i; while(j<K.length&&isK(K[j])) j++;
+  let a1;
+  if(j>=K.length) a1=A.length;
+  else { let e=j; while(e<K.length&&!isK(K[e])) e++; a1=As.indexOf(Kn.slice(j,e).join(''),a+1); if(a1<0) return null; }
+  if(a1<=a) return null;
+  segs.push({k0:i,k1:j,a0:a,a1}); i=j; a=a1;
+ }
+ return a===A.length?segs:null;
+}
+function kanjiRange(L,fin){
+ if(fin) return [L,L];
+ if(kanjiSeg){ const o=nodeOff[currentNodeIndex], g=kanjiSeg.find(x=>o>=x.a0&&o<x.a1); if(g) return [g.k0,g.k1]; }
+ const p=kanjiPos(L); return [p,p+1];                      // 対応づけに失敗した文は従来の推定
+}
 function loadSentence(){
  if(!isPlaying) return;
  if(currentSentenceIndex>=playSentences.length){ finishGame(); return; }
@@ -471,6 +493,7 @@ function loadSentence(){
  const chars=Array.from(s.kanji);
  chars.forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; kd.appendChild(sp); });
  kanjiMap=buildKanjiMap(chars,parsedNodes);
+ kanjiSeg=alignSegments(s.kanji,s.kana); nodeOff=[0]; parsedNodes.forEach(n=>nodeOff.push(nodeOff[nodeOff.length-1]+n.kana.length));
  skipNonTypableNodes();
 }
 function skipNonTypableNodes(){
@@ -482,8 +505,9 @@ function skipNonTypableNodes(){
  }
 }
 function updateHighlighting(){
- const kc=$('kanji-display').children, L=kc.length, pos=kanjiPos(L), fin=currentNodeIndex>=parsedNodes.length;
- for(let i=0;i<L;i++) kc[i].className=i<pos?'text-slate-400':(i===pos&&!fin)?'text-orange-600 underline decoration-4 underline-offset-8 decoration-orange-400':'text-slate-800';
+ const kc=$('kanji-display').children, L=kc.length, fin=currentNodeIndex>=parsedNodes.length;
+ const [lo,hi]=kanjiRange(L,fin);
+ for(let i=0;i<L;i++) kc[i].className=i<lo?'text-slate-400':i<hi?'text-orange-600 underline decoration-4 underline-offset-8 decoration-orange-400':'text-slate-800';
  const nk=$('now-kana'), nr=$('now-romaji'); nk.textContent=''; nr.textContent='';
  if(!fin&&(hintLevel===0||showHint)){
   const n=parsedNodes[currentNodeIndex], vp=n.romajiPatterns.filter(p=>p.startsWith(currentTypingState)), d=vp.length?vp[0]:n.display;
