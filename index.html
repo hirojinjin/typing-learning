@@ -24,6 +24,43 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
 .key-shift { width:clamp(38px,7vw,80px); font-size:.7rem; }
 .key-space { width:clamp(140px,40vw,400px); }
 @media (max-height:550px) { .finger-area { display:none !important; } }
+.avatar{width:100%;height:100%;overflow:visible}
+.bob{animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.armL{transform-origin:18px 98px;animation:swingL 1.8s ease-in-out infinite}
+.armR{transform-origin:102px 98px;animation:swingR 1.8s ease-in-out infinite}
+@keyframes swingL{50%{transform:rotate(8deg)}}
+@keyframes swingR{50%{transform:rotate(-8deg)}}
+.eyes{transform-origin:60px 68px;animation:blink 4s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.armL.pose,.armR.pose{animation:none}
+.actbody{transform-origin:70px 120px}
+.acting.act-hop .actbody{animation:hop .45s ease-out 2}
+.acting.act-jump .actbody{animation:jump .7s ease-out 2}
+.acting.act-spin .actbody{animation:spinx .5s linear 3}
+.acting.act-dance .actbody{transform-origin:70px 200px;animation:sway .35s ease-in-out 8}
+.acting.act-dance .armL{animation:danceL .35s ease-in-out 8}
+.acting.act-dance .armR{animation:danceR .35s ease-in-out 8}
+.acting.act-wave .armR{animation:wave .35s ease-in-out 5}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}}
+@keyframes jump{0%,100%{transform:translateY(0)}45%{transform:translateY(-34px)}}
+@keyframes spinx{0%,100%{transform:scaleX(1)}50%{transform:scaleX(-1)}}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes danceL{0%,100%{transform:rotate(150deg)}50%{transform:rotate(20deg)}}
+@keyframes danceR{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(-150deg)}}
+@keyframes wave{0%,100%{transform:rotate(-135deg)}50%{transform:rotate(-170deg)}}
+.bt-hit{animation:btHit .4s}
+@keyframes btHit{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px) rotate(-6deg)}40%{transform:translateX(8px) rotate(5deg)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.bt-attack{animation:btAtk .5s ease-out}
+@keyframes btAtk{0%{transform:translateX(0)}40%{transform:translateX(80px) scale(1.1)}100%{transform:translateX(0)}}
+.bt-hurt{animation:btHurt .4s}
+@keyframes btHurt{0%,100%{transform:translateX(0)}25%{transform:translateX(10px) rotate(5deg)}50%{transform:translateX(-8px)}75%{transform:translateX(5px)}}
+.bt-ko{animation:btKo 1.1s forwards}
+@keyframes btKo{30%{transform:translateY(-8px)}to{transform:translateY(34px) rotate(80deg) scale(.8);opacity:0}}
+.mission-pulse{animation:mpulse 1.6s ease-in-out infinite}
+@keyframes mpulse{50%{transform:scale(1.03);box-shadow:0 0 0 8px rgba(251,146,60,.25)}}
+.pet{animation:petbob 1.3s ease-in-out infinite}
+@keyframes petbob{50%{transform:translateY(-3px)}}
 </style>
 </head>
 <body class="w-full flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden relative">
@@ -44,18 +81,29 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
     <h1 class="text-3xl font-black text-slate-800">学習タイピングポータル</h1>
     <button onclick="initNewsMode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg">📰 今日のキーワード</button>
   </div>
+  <div id="mission-card" class="w-full mb-5"></div>
+  <div class="w-full flex items-center gap-5 bg-gradient-to-r from-sky-50 to-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 mb-6">
+    <div id="menu-avatar" class="w-28 h-36 shrink-0"></div>
+    <div id="menu-pet" class="w-16 h-16 shrink-0 self-end"></div>
+    <div class="flex-1">
+      <div class="text-lg font-black text-slate-800">ぼうけんしゃ</div>
+      <div class="text-sm text-slate-500 mb-3">そうび <b id="collect-count">0/24</b>　単元をクリアすると手に入る！</div>
+      <button onclick="openInventory()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-xl shadow">🎒 もちもの・そうび</button>
+    </div>
+  </div>
   <p class="mb-6 text-slate-600 font-medium text-center">挑戦するモードを選んでください。</p>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
     <button onclick="switchScreen('setup-screen')" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition">
       <div class="text-5xl mb-4">✏️</div><h2 class="text-xl font-bold text-slate-800 mb-2">カスタムモード</h2>
       <p class="text-sm text-slate-500 text-center">好きな文章を貼り付けて<br>自動でふりがな生成</p></button>
     <button onclick="initPatternA()" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-green-500 hover:bg-green-50 transition">
-      <div class="text-5xl mb-4">📖</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (目次)</h2>
-      <p class="text-sm text-slate-500 text-center">国語・理科・社会の<br>単元を選んで復習</p></button>
+      <div class="text-5xl mb-4">📖</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (練習)</h2>
+      <p class="text-sm text-slate-500 text-center">戦いなしの練習モード<br>（そうびは出ないよ）</p></button>
     <button onclick="initPatternB()" class="group flex flex-col items-center justify-center p-8 bg-white border-2 border-slate-200 rounded-2xl hover:border-yellow-500 hover:bg-yellow-50 transition">
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
-      <p class="text-sm text-slate-500 text-center">RPG感覚で<br>ステージをクリアしよう</p></button>
+      <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾b</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -113,11 +161,31 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
 <div id="pat-b-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-40 flex items-center justify-center p-4">
   <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full relative">
     <button onclick="document.getElementById('pat-b-modal').classList.add('hidden')" class="absolute top-4 right-5 text-slate-400 hover:text-slate-600 text-2xl font-bold">✖</button>
-    <h2 id="pat-b-modal-title" class="text-2xl font-black text-slate-800 mb-6 text-center border-b-2 pb-3"></h2>
+    <h2 id="pat-b-modal-title" class="text-2xl font-black text-slate-800 mb-3 text-center border-b-2 pb-3"></h2>
+    <div id="pat-b-enemy" class="flex flex-col items-center mb-4"></div>
     <label class="block text-sm font-bold text-slate-500 mb-2">クエストの長さ</label>
     <select id="pat-b-length" class="w-full p-3 border-2 border-slate-200 rounded-xl mb-4"><option value="60">ショート (約60文字)</option><option value="150" selected>スタンダード (約150文字)</option><option value="ALL">ボス戦 (全文)</option></select>
     <label class="flex items-center text-sm font-bold text-slate-700 mb-8 bg-slate-50 p-4 rounded-xl border cursor-pointer"><input type="checkbox" id="pat-b-random" class="mr-3 w-5 h-5 accent-yellow-500">ランダムエンカウント</label>
     <button id="pat-b-start-btn" class="w-full text-white font-black py-4 rounded-xl shadow-lg text-xl">いざ、出発！</button>
+  </div>
+</div>
+
+<div id="inv-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-40 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-3xl w-full max-h-full overflow-y-auto relative">
+    <button onclick="closeInventory()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">✖</button>
+    <h2 class="text-2xl font-black text-slate-800 mb-4">🎒 もちもの <span id="inv-count" class="text-base text-slate-500"></span></h2>
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div id="inv-avatar" class="w-36 h-48 shrink-0 mx-auto bg-sky-50 rounded-2xl p-2"></div>
+      <div id="inv-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-1"></div>
+    </div>
+    <p class="text-xs text-slate-400 mt-3">タップで そうび／はずす。高い正確さでクリアするほど、レアが出やすい！</p>
+    <h3 class="font-black text-slate-800 mt-4 mb-2">🐾 ペット <span class="text-xs font-normal text-slate-500">（教科のそうびを ぜんぶ集めると なかまになる）</span></h3>
+    <div id="inv-pets" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+    <div class="mt-4 pt-3 border-t border-slate-200">
+      <div class="flex flex-wrap items-center gap-2"><span class="text-xs text-slate-500">💾 きろくのバックアップ：</span><button onclick="exportCode()" class="text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg px-3 py-1">コードを作る</button><button onclick="importCode()" class="text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg px-3 py-1">コードを読み込む</button></div>
+      <textarea id="backup-box" rows="3" class="hidden w-full mt-2 border-2 border-slate-200 rounded-lg p-2 text-xs font-mono"></textarea>
+      <div id="backup-msg" class="text-xs mt-1 text-slate-500"></div>
+    </div>
   </div>
 </div>
 
@@ -129,6 +197,18 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <button id="hint-btn" class="text-xs font-bold bg-white border-2 border-slate-300 rounded-lg px-3 py-1 text-slate-600"></button>
       <button id="toggle-mute-btn" class="text-xl w-8 h-8 flex items-center justify-center bg-white border rounded-full">🔊</button>
       <button id="close-game-btn" class="border-2 border-slate-300 bg-white font-bold text-slate-600 rounded-lg px-3 py-1 text-xs">✖ 諦める</button>
+    </div>
+  </div>
+  <div id="battle-bar" class="hidden shrink-0 flex items-end justify-between gap-2 px-4 sm:px-16 pt-2 pb-1 bg-gradient-to-b from-sky-50 to-white border-b border-slate-200">
+    <div class="flex items-end gap-2">
+      <div class="relative w-16 h-24 sm:w-20 sm:h-28"><div id="bt-player" class="w-full h-full"></div><div id="bt-bandages" class="absolute inset-0 pointer-events-none"></div></div>
+      <div id="bt-pet" class="w-10 h-10 sm:w-12 sm:h-12 shrink-0"></div>
+      <div class="pb-2"><div class="text-xs font-bold text-slate-500">あなた</div><div id="bt-hearts" class="text-base sm:text-lg leading-none"></div></div>
+    </div>
+    <div id="bt-msg" class="hidden self-center text-lg sm:text-2xl font-black text-red-600 text-center"></div>
+    <div class="flex items-end gap-3 flex-row-reverse">
+      <div id="bt-enemy" class="w-20 h-20 sm:w-28 sm:h-28"></div>
+      <div class="pb-2 w-28 sm:w-44"><div id="bt-ename" class="text-xs font-bold text-slate-500 truncate"></div><div class="h-3 bg-slate-200 rounded-full overflow-hidden"><div id="bt-hp" class="h-full bg-rose-500" style="width:100%;transition:width .2s"></div></div></div>
     </div>
   </div>
   <!-- 本文が主役。読みは「いま打つ1文字分」だけ -->
@@ -145,7 +225,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
 
 <!-- Result -->
 <div id="result-screen" class="hidden bg-slate-50 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col h-full overflow-hidden border-2 border-slate-200">
-  <div class="flex-none p-2 sm:p-4 border-b-2 border-slate-200 bg-white"><h2 class="text-xl sm:text-2xl font-black text-slate-800">タイピング成績表</h2></div>
+  <div class="flex-none p-2 sm:p-4 border-b-2 border-slate-200 bg-white"><h2 id="res-title" class="text-xl sm:text-2xl font-black text-slate-800">タイピング成績表</h2></div>
   <div class="flex-1 min-h-0 flex flex-col md:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden">
     <div class="flex-1 overflow-y-auto border-2 border-slate-200 p-4 bg-white rounded-xl" id="result-sentences"></div>
     <div class="w-full md:w-1/3 flex-none md:max-w-xs border-2 border-slate-200 flex flex-col bg-white rounded-xl overflow-hidden text-xs sm:text-sm">
@@ -160,6 +240,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
     </div>
   </div>
   <div class="flex-none p-2 border-t-2 border-slate-200 bg-white flex flex-col gap-2">
+    <div id="drop-box" class="hidden"></div>
     <div class="text-center p-2 bg-blue-50 border border-blue-200 rounded-xl font-bold text-slate-800 text-sm" id="res-comment"></div>
     <div class="flex flex-wrap justify-center gap-2 sm:gap-4">
       <button id="btn-miss-only" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 sm:px-6 rounded-xl disabled:bg-slate-300 text-sm">ミスだけ再挑戦</button>
@@ -227,6 +308,7 @@ const textbookData = {
 // ---------- 追加教材 ----------
 const ADDED_UNITS={"kokugo": [{"title": "漢字の成り立ち", "sentences": [{"kanji": "漢字には、物の形をかたどった象形文字や、印で意味を表した指事文字などがあります。", "kana": "かんじには、もののかたちをかたどったしょうけいもじや、しるしでいみをあらわしたしじもじなどがあります。"}, {"kanji": "「木」と「木」を合わせて「林」となるように、意味を組み合わせた漢字を会意文字といいます。", "kana": "「き」と「き」をあわせて「はやし」となるように、いみをくみあわせたかんじをかいいもじといいます。"}, {"kanji": "意味を表す部分と音を表す部分を合わせた漢字を、形声文字といいます。", "kana": "いみをあらわすぶぶんとおとをあらわすぶぶんをあわせたかんじを、けいせいもじといいます。"}, {"kanji": "漢字には、中国から伝わった音を表す音読みと、日本の言葉を当てた訓読みがあります。", "kana": "かんじには、ちゅうごくからつたわったおとをあらわすおんよみと、にほんのことばをあてたくんよみがあります。"}]}, {"title": "古文に親しむ", "sentences": [{"kanji": "古文とは、昔の日本で書かれた文章のことで、今の言葉とは言い方がちがう部分があります。", "kana": "こぶんとは、むかしのにほんでかかれたぶんしょうのことで、いまのことばとはいいかたがちがうぶぶんがあります。"}, {"kanji": "「平家物語」は、平氏が栄え、やがて滅びていくようすを語った軍記物語です。", "kana": "「へいけものがたり」は、へいしがさかえ、やがてほろびていくようすをかたったぐんきものがたりです。"}, {"kanji": "「枕草子」は、清少納言が自然や人々のようすを書いた随筆です。", "kana": "「まくらのそうし」は、せいしょうなごんがしぜんやひとびとのようすをかいたずいひつです。"}]}, {"title": "四字熟語", "sentences": [{"kanji": "四字熟語は、四つの漢字が組み合わさって、特別な意味を表す言葉です。", "kana": "よじじゅくごは、よっつのかんじがくみあわさって、とくべつないみをあらわすことばです。"}, {"kanji": "「一石二鳥」は、一つのことで二つの得をするという意味です。", "kana": "「いっせきにちょう」は、ひとつのことでふたつのとくをするといういみです。"}, {"kanji": "「以心伝心」は、言葉にしなくても気持ちが相手に伝わることです。", "kana": "「いしんでんしん」は、ことばにしなくてもきもちがあいてにつたわることです。"}, {"kanji": "「十人十色」は、人によって考え方や好みがちがうという意味です。", "kana": "「じゅうにんといろ」は、ひとによってかんがえかたやこのみがちがうといういみです。"}]}], "rika": [{"title": "動物のたんじょう", "sentences": [{"kanji": "メダカの雌が産んだ卵に、雄が出した精子が結びつくことを受精といいます。", "kana": "めだかのめすがうんだたまごに、おすがだしたせいしがむすびつくことをじゅせいといいます。"}, {"kanji": "受精した卵は、日がたつにつれて、中で体のつくりが少しずつできていきます。", "kana": "じゅせいしたたまごは、ひがたつにつれて、なかでからだのつくりがすこしずつできていきます。"}, {"kanji": "卵の中の養分を使って育ち、約十一日たつと子メダカがふ化します。", "kana": "たまごのなかのようぶんをつかってそだち、やくじゅういちにちたつとこめだかがふかします。"}, {"kanji": "人は、母親の体内で約三十八週間育ってから生まれます。", "kana": "ひとは、ははおやのたいないでやくさんじゅうはっしゅうかんそだってからうまれます。"}]}, {"title": "流れる水のはたらき", "sentences": [{"kanji": "流れる水には、地面をけずる侵食、土を運ぶ運搬、積もらせる堆積のはたらきがあります。", "kana": "ながれるみずには、じめんをけずるしんしょく、つちをはこぶうんぱん、つもらせるたいせきのはたらきがあります。"}, {"kanji": "川の上流では、流れが速く、谷が深くけずられてV字谷ができます。", "kana": "かわのじょうりゅうでは、ながれがはやく、たにがふかくけずられてVじだにができます。"}, {"kanji": "川の下流では、運ばれてきた土が積もり、広い平野や三角州ができます。", "kana": "かわのかりゅうでは、はこばれてきたつちがつもり、ひろいへいややさんかくすができます。"}, {"kanji": "大雨で川の水が増えると、水の力が強くなり、洪水が起こることがあります。", "kana": "おおあめでかわのみずがふえると、みずのちからがつよくなり、こうずいがおこることがあります。"}]}, {"title": "ものの溶け方", "sentences": [{"kanji": "物が水に溶けて、すき通った液になることを、溶けるといいます。", "kana": "ものがみずにとけて、すきとおったえきになることを、とけるといいます。"}, {"kanji": "物が水に溶ける量には限りがあり、水の温度によって変わります。", "kana": "ものがみずにとけるりょうにはかぎりがあり、みずのおんどによってかわります。"}, {"kanji": "食塩は水の温度が変わっても溶ける量があまり変わりませんが、ミョウバンは温度が高いほどたくさん溶けます。", "kana": "しょくえんはみずのおんどがかわってもとけるりょうがあまりかわりませんが、みょうばんはおんどがたかいほどたくさんとけます。"}, {"kanji": "溶け残りを取り除くには、ろ紙を使ってろ過をします。", "kana": "とけのこりをとりのぞくには、ろしをつかってろかをします。"}]}], "shakai": [{"title": "水産業のさかんな地域", "sentences": [{"kanji": "日本の近海には、暖流と寒流がぶつかる潮目があり、魚がたくさん集まります。", "kana": "にほんのきんかいには、だんりゅうとかんりゅうがぶつかるしおめがあり、さかながたくさんあつまります。"}, {"kanji": "魚をとる漁業には、沖合漁業や遠洋漁業のほかに、魚や貝を育てる養殖業もあります。", "kana": "さかなをとるぎょぎょうには、おきあいぎょぎょうやえんようぎょぎょうのほかに、さかなやかいをそだてるようしょくぎょうもあります。"}, {"kanji": "魚のとりすぎなどで資源が減ることが、日本の漁業の課題になっています。", "kana": "さかなのとりすぎなどでしげんがへることが、にほんのぎょぎょうのかだいになっています。"}]}, {"title": "情報を伝える人々", "sentences": [{"kanji": "テレビや新聞、インターネットなどを通して、たくさんの人に情報を伝えるしくみをマスメディアといいます。", "kana": "てれびやしんぶん、いんたーねっとなどをとおして、たくさんのひとにじょうほうをつたえるしくみをますめでぃあといいます。"}, {"kanji": "ニュースをつくる人たちは、正確さと速さを大切にしながら、取材を重ねて情報を伝えています。", "kana": "にゅーすをつくるひとたちは、せいかくさとはやさをたいせつにしながら、しゅざいをかさねてじょうほうをつたえています。"}, {"kanji": "情報を受け取るときは、それが正しいかどうかを自分で考えて判断することが大切です。", "kana": "じょうほうをうけとるときは、それがただしいかどうかをじぶんでかんがえてはんだんすることがたいせつです。"}]}, {"title": "自然災害と防災", "sentences": [{"kanji": "日本は地震や津波、台風、大雨などの自然災害が多い国です。", "kana": "にほんはじしんやつなみ、たいふう、おおあめなどのしぜんさいがいがおおいくにです。"}, {"kanji": "国や都道府県、市町村は、ハザードマップをつくって、地域の危険な場所を知らせています。", "kana": "くにやとどうふけん、しちょうそんは、はざーどまっぷをつくって、ちいきのきけんなばしょをしらせています。"}, {"kanji": "日ごろから避難場所や避難経路を確認し、家族で防災について話し合っておくことが大切です。", "kana": "ひごろからひなんばしょやひなんけいろをかくにんし、かぞくでぼうさいについてはなしあっておくことがたいせつです。"}]}]};
 Object.keys(ADDED_UNITS).forEach(k=>textbookData[k].units.push(...ADDED_UNITS[k]));
+Object.entries(textbookData).forEach(([k,v])=>v.units.forEach(u=>u.subject=k));
 
 // ---------- ローマ字表 ----------
 const multiRomajiMap = {
@@ -263,6 +345,316 @@ const SHIFT_BASE = { '!':'1', '?':'/' };            // Shiftが要る記号 → 
 const keyFingerMap = { '1':0,'Q':0,'A':0,'Z':0,'2':1,'W':1,'S':1,'X':1,'3':2,'E':2,'D':2,'C':2,'4':3,'5':3,'R':3,'T':3,'F':3,'G':3,'V':3,'B':3,' ':5,
  '6':6,'7':6,'Y':6,'U':6,'H':6,'J':6,'N':6,'M':6,'8':7,'I':7,'K':7,',':7,'9':8,'O':8,'L':8,'.':8,'0':9,'-':9,'P':9,'@':9,'[':9,';':9,':':9,']':9,'/':9 };
 
+// ---------- そうび・アバター ----------
+const RSTAR={common:'★',rare:'★★',epic:'★★★'}, RANK=['common','rare','epic'];
+const SUBJ_NAME={kokugo:'国語',rika:'理科',shakai:'社会'};
+const SLOT_NAME={head:'あたま',face:'かお',body:'からだ',back:'せなか',hand:'て',arms:'うで',expr:'ひょうじょう',pose:'ポーズ',action:'アクション'};
+const ITEMS=[
+ {id:'k1',name:'はちまき',icon:'🎀',slot:'head',subject:'kokugo',rarity:'common',svg:'<rect x="38" y="56" width="44" height="8" fill="#ef4444"/><rect x="80" y="57" width="14" height="4" fill="#ef4444"/><rect x="84" y="61" width="4" height="12" fill="#ef4444"/>'},
+ {id:'k2',name:'でっかい巻物',icon:'📜',slot:'hand',subject:'kokugo',rarity:'common',svg:'<g transform="rotate(-8 108 150)"><rect x="101" y="118" width="12" height="50" rx="3" fill="#fde68a" stroke="#92400e" stroke-width="2"/><rect x="98" y="116" width="18" height="5" rx="2" fill="#92400e"/><rect x="98" y="165" width="18" height="5" rx="2" fill="#92400e"/></g>'},
+ {id:'k3',name:'頭にえんぴつ',icon:'✏️',slot:'head',subject:'kokugo',rarity:'rare',svg:'<rect x="56" y="14" width="8" height="38" fill="#f59e0b"/><polygon points="56,14 64,14 60,2" fill="#fde68a"/><polygon points="58,8 62,8 60,2" fill="#374151"/><rect x="56" y="46" width="8" height="6" fill="#f9a8d4"/>'},
+ {id:'k4',name:'ことばのムキムキうで',icon:'💪',slot:'arms',subject:'kokugo',rarity:'epic',svgL:'<rect x="4" y="122" width="20" height="28" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><ellipse cx="12" cy="112" rx="17" ry="20" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>',svgR:'<rect x="96" y="122" width="20" height="28" fill="#facc15" stroke="#ca8a04" stroke-width="2"/><ellipse cx="108" cy="112" rx="17" ry="20" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>'},
+ {id:'r1',name:'ゴーグル',icon:'🥽',slot:'face',subject:'rika',rarity:'common',svg:'<line x1="40" y1="67" x2="46" y2="67" stroke="#1f2937" stroke-width="3"/><line x1="74" y1="67" x2="80" y2="67" stroke="#1f2937" stroke-width="3"/><rect x="46" y="59" width="14" height="14" rx="4" fill="#bae6fd" fill-opacity=".5" stroke="#1f2937" stroke-width="3"/><rect x="60" y="59" width="14" height="14" rx="4" fill="#bae6fd" fill-opacity=".5" stroke="#1f2937" stroke-width="3"/>'},
+ {id:'r2',name:'ぶくぶくフラスコ',icon:'🧪',slot:'hand',subject:'rika',rarity:'common',svg:'<rect x="105" y="124" width="8" height="14" fill="#cbd5e1"/><path d="M103 138 H115 L122 162 Q123 168 117 168 H101 Q95 168 96 162 Z" fill="#a78bfa" fill-opacity=".85" stroke="#4c1d95" stroke-width="2"/><circle cx="108" cy="156" r="3" fill="#fff"/>'},
+ {id:'r3',name:'はかせの白衣',icon:'🥼',slot:'body',subject:'rika',rarity:'rare',svg:'<rect x="28" y="94" width="28" height="54" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/><rect x="64" y="94" width="28" height="54" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/><rect x="34" y="124" width="12" height="10" fill="#cbd5e1"/><rect x="38" y="118" width="2" height="8" fill="#ef4444"/>'},
+ {id:'r4',name:'ばくはつアフロ',icon:'💥',slot:'head',subject:'rika',rarity:'epic',svg:'<g fill="#374151"><circle cx="38" cy="50" r="14"/><circle cx="60" cy="38" r="19"/><circle cx="82" cy="50" r="14"/><circle cx="48" cy="40" r="12"/><circle cx="72" cy="40" r="12"/></g>'},
+ {id:'s1',name:'たんけんぼうし',icon:'👒',slot:'head',subject:'shakai',rarity:'common',svg:'<rect x="32" y="54" width="56" height="6" rx="2" fill="#a16207"/><rect x="44" y="38" width="32" height="18" rx="4" fill="#ca8a04"/><rect x="44" y="50" width="32" height="4" fill="#78350f"/>'},
+ {id:'s2',name:'まっかなマント',icon:'🦸',slot:'back',subject:'shakai',rarity:'common',svg:'<path d="M30 96 L90 96 L104 190 L16 190 Z" fill="#dc2626"/>'},
+ {id:'s3',name:'ツノつきかぶと',icon:'🪖',slot:'head',subject:'shakai',rarity:'rare',svg:'<path d="M38 62 Q38 38 60 38 Q82 38 82 62 Z" fill="#9ca3af"/><rect x="36" y="58" width="48" height="6" fill="#6b7280"/><path d="M60 38 L54 18 L60 27 L66 18 Z" fill="#fbbf24"/>'},
+ {id:'s4',name:'ピカピカ銀のよろい',icon:'🛡️',slot:'body',subject:'shakai',rarity:'epic',svg:'<rect x="28" y="94" width="64" height="54" fill="#cbd5e1" stroke="#475569" stroke-width="2"/><rect x="28" y="94" width="64" height="8" fill="#94a3b8"/><rect x="28" y="140" width="64" height="8" fill="#94a3b8"/><rect x="18" y="90" width="22" height="12" rx="3" fill="#94a3b8" stroke="#475569" stroke-width="2"/><rect x="80" y="90" width="22" height="12" rx="3" fill="#94a3b8" stroke="#475569" stroke-width="2"/><circle cx="60" cy="122" r="10" fill="#fbbf24" stroke="#b45309" stroke-width="2"/><circle cx="60" cy="122" r="4" fill="#dc2626"/>'},
+ {id:'x1',name:'ドヤ顔',icon:'😏',slot:'expr',subject:'kokugo',rarity:'rare',eyes:'<rect x="50" y="66" width="10" height="5" fill="#1f2937"/><rect x="64" y="66" width="10" height="5" fill="#1f2937"/><line x1="49" y1="61" x2="60" y2="63" stroke="#7c2d12" stroke-width="3"/><line x1="64" y1="60" x2="75" y2="58" stroke="#7c2d12" stroke-width="3"/>',mouth:'<path d="M52 82 Q66 88 74 76" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>'},
+ {id:'x2',name:'うるうるの目',icon:'🥹',slot:'expr',subject:'kokugo',rarity:'rare',eyes:'<ellipse cx="55" cy="68" rx="6" ry="8" fill="#1f2937"/><ellipse cx="69" cy="68" rx="6" ry="8" fill="#1f2937"/><circle cx="53" cy="65" r="2.5" fill="#fff"/><circle cx="67" cy="65" r="2.5" fill="#fff"/><path d="M49 77 q-3 5 0 8 q3-3 0-8z" fill="#60a5fa"/>',mouth:'<path d="M54 84 Q60 78 66 84" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>'},
+ {id:'x3',name:'ガッツポーズ',icon:'✊',slot:'pose',subject:'kokugo',rarity:'rare',poseL:'rotate(15deg)',poseR:'rotate(-155deg)'},
+ {id:'x4',name:'ちょうジャンプ',icon:'🦘',slot:'action',subject:'kokugo',rarity:'epic',act:'jump'},
+ {id:'y1',name:'ぐるぐる目',icon:'😵‍💫',slot:'expr',subject:'rika',rarity:'rare',eyes:'<circle cx="54" cy="68" r="7" fill="#fff" stroke="#1f2937" stroke-width="2"/><circle cx="54" cy="68" r="3.5" fill="none" stroke="#1f2937" stroke-width="2"/><circle cx="70" cy="68" r="7" fill="#fff" stroke="#1f2937" stroke-width="2"/><circle cx="70" cy="68" r="3.5" fill="none" stroke="#1f2937" stroke-width="2"/>',mouth:'<path d="M50 83 Q54 78 58 83 T66 83 T70 83" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>'},
+ {id:'y2',name:'ロボットポーズ',icon:'🤖',slot:'pose',subject:'rika',rarity:'rare',poseL:'rotate(90deg)',poseR:'rotate(-180deg)'},
+ {id:'y3',name:'いばりんぼう立ち',icon:'🦾',slot:'pose',subject:'rika',rarity:'rare',poseL:'rotate(32deg)',poseR:'rotate(-32deg)'},
+ {id:'y4',name:'くるくるスピン',icon:'🌀',slot:'action',subject:'rika',rarity:'epic',act:'spin'},
+ {id:'z1',name:'びっくり顔',icon:'😲',slot:'expr',subject:'shakai',rarity:'rare',eyes:'<circle cx="54" cy="68" r="7" fill="#fff" stroke="#1f2937" stroke-width="2"/><circle cx="54" cy="68" r="2.5" fill="#1f2937"/><circle cx="70" cy="68" r="7" fill="#fff" stroke="#1f2937" stroke-width="2"/><circle cx="70" cy="68" r="2.5" fill="#1f2937"/>',mouth:'<ellipse cx="62" cy="82" rx="5" ry="6" fill="#7c2d12"/>'},
+ {id:'z2',name:'バンザイ',icon:'🙆',slot:'pose',subject:'shakai',rarity:'rare',poseL:'rotate(165deg)',poseR:'rotate(-165deg)'},
+ {id:'z3',name:'ふりふりあいさつ',icon:'👋',slot:'action',subject:'shakai',rarity:'rare',act:'wave'},
+ {id:'z4',name:'ノリノリダンス',icon:'🕺',slot:'action',subject:'shakai',rarity:'epic',act:'dance'}
+];
+const LIMITED=[
+ {id:'m01',month:1,name:'かがみもちぼうし',icon:'🎍',slot:'head',svg:'<ellipse cx="60" cy="48" rx="22" ry="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/><ellipse cx="60" cy="38" rx="15" ry="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/><circle cx="60" cy="28" r="7" fill="#f97316" stroke="#9a3412" stroke-width="2"/><path d="M60 21 l4 -6" stroke="#15803d" stroke-width="3"/>'},
+ {id:'m02',month:2,name:'おにのツノ',icon:'👹',slot:'head',svg:'<g fill="#ef4444" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"><polygon points="42,54 36,24 56,46"/><polygon points="78,54 84,24 64,46"/></g>'},
+ {id:'m03',month:3,name:'ひなまつりのかんむり',icon:'🎎',slot:'head',svg:'<polygon points="42,56 46,32 60,44 74,32 78,56" fill="#fde047" stroke="#a16207" stroke-width="2" stroke-linejoin="round"/><circle cx="60" cy="38" r="5" fill="#f472b6" stroke="#9d174d" stroke-width="1.5"/>'},
+ {id:'m04',month:4,name:'さくらの花かんむり',icon:'🌸',slot:'head',svg:'<g fill="#f9a8d4" stroke="#be185d" stroke-width="1.5"><circle cx="44" cy="56" r="7"/><circle cx="55" cy="49" r="7"/><circle cx="67" cy="49" r="7"/><circle cx="77" cy="56" r="7"/></g><g fill="#fde047"><circle cx="44" cy="56" r="2.5"/><circle cx="55" cy="49" r="2.5"/><circle cx="67" cy="49" r="2.5"/><circle cx="77" cy="56" r="2.5"/></g>'},
+ {id:'m05',month:5,name:'こいのぼりリュック',icon:'🎏',slot:'back',svg:'<rect x="88" y="22" width="3" height="84" fill="#78350f"/><path d="M91 28 Q112 22 124 38 Q112 54 91 48Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="2"/><circle cx="102" cy="36" r="3" fill="#fff"/><path d="M124 38 L132 30 L132 46Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="2"/>'},
+ {id:'m06',month:6,name:'でっかいあまがさ',icon:'☔',slot:'hand',svg:'<rect x="110.5" y="100" width="3" height="48" rx="1.5" fill="#475569"/><path d="M92 102 Q112 68 132 102Z" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>'},
+ {id:'m07',month:7,name:'ひまわりぼうし',icon:'🌻',slot:'head',svg:'<g fill="#facc15" stroke="#a16207" stroke-width="1.5"><ellipse cx="60" cy="36" rx="5" ry="15"/><ellipse cx="60" cy="36" rx="5" ry="15" transform="rotate(45 60 36)"/><ellipse cx="60" cy="36" rx="5" ry="15" transform="rotate(90 60 36)"/><ellipse cx="60" cy="36" rx="5" ry="15" transform="rotate(135 60 36)"/></g><circle cx="60" cy="36" r="7" fill="#78350f"/><rect x="56" y="46" width="8" height="8" fill="#16a34a"/>'},
+ {id:'m08',month:8,name:'すいかぼうし',icon:'🍉',slot:'head',svg:'<path d="M38 56 Q38 28 60 28 Q82 28 82 56 Z" fill="#ef4444" stroke="#15803d" stroke-width="4" stroke-linejoin="round"/><g fill="#1f2937"><ellipse cx="50" cy="44" rx="2" ry="3.5"/><ellipse cx="60" cy="38" rx="2" ry="3.5"/><ellipse cx="70" cy="44" rx="2" ry="3.5"/></g>'},
+ {id:'m09',month:9,name:'おつきみうさ耳',icon:'🐰',slot:'head',svg:'<g fill="#f8fafc" stroke="#94a3b8" stroke-width="2"><rect x="44" y="10" width="10" height="42" rx="5"/><rect x="66" y="10" width="10" height="42" rx="5"/></g><g fill="#f9a8d4"><rect x="47" y="16" width="4" height="28" rx="2"/><rect x="69" y="16" width="4" height="28" rx="2"/></g>'},
+ {id:'m10',month:10,name:'ハロウィンかぼちゃ',icon:'🎃',slot:'head',svg:'<ellipse cx="60" cy="42" rx="25" ry="16" fill="#f97316" stroke="#9a3412" stroke-width="2"/><path d="M60 27 q2 -9 9 -10" stroke="#15803d" stroke-width="3" fill="none"/><polygon points="48,36 55,36 51.5,43" fill="#7c2d12"/><polygon points="65,36 72,36 68.5,43" fill="#7c2d12"/><path d="M49 49 L54 45 L60 49 L66 45 L71 49" stroke="#7c2d12" stroke-width="2" fill="none" stroke-linejoin="round"/>'},
+ {id:'m11',month:11,name:'もみじのかんむり',icon:'🍁',slot:'head',svg:'<g stroke="#7f1d1d" stroke-width="1.5" stroke-linejoin="round"><polygon points="42,56 48,40 55,56 48,60" fill="#ef4444"/><polygon points="54,50 60,32 66,50 60,56" fill="#f97316"/><polygon points="65,56 72,40 78,56 72,60" fill="#facc15"/></g>'},
+ {id:'m12',month:12,name:'サンタぼうし',icon:'🎅',slot:'head',svg:'<path d="M40 58 Q42 30 62 28 Q74 28 88 42 Q80 40 80 58Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"/><rect x="38" y="52" width="44" height="9" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/><circle cx="88" cy="42" r="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>'}
+].map(i=>Object.assign({subject:'limited',rarity:'epic'},i));
+const ITEM={}; ITEMS.concat(LIMITED).forEach(i=>ITEM[i.id]=i);
+let SAVE={owned:[],equipped:{},cleared:{}};
+try{ const j=JSON.parse(localStorage.getItem('typingSaveV1')||'null'); if(j) SAVE=Object.assign(SAVE,j); }catch(e){}
+function persist(){ try{ localStorage.setItem('typingSaveV1',JSON.stringify(SAVE)); }catch(e){} }
+function avatarSVG(eq){
+ const it=sl=>eq[sl]?ITEM[eq[sl]]:null, S=sl=>it(sl)?it(sl).svg||'':'';
+ const ar=it('arms'), po=it('pose'), ex=it('expr'), ac=it('action');
+ const armL=ar?ar.svgL:'<rect x="8" y="94" width="20" height="50" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>';
+ const armR=(ar?ar.svgR:'<rect x="92" y="94" width="20" height="50" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>')+S('hand');
+ const pc=po?' pose':'', pl=po?' style="transform:'+po.poseL+'"':'', pr=po?' style="transform:'+po.poseR+'"':'';
+ const eyes=ex?ex.eyes:'<rect x="52" y="64" width="5" height="8" fill="#1f2937"/><rect x="66" y="64" width="5" height="8" fill="#1f2937"/>';
+ const mouth=ex?ex.mouth:'<path d="M53 79 Q60 86 67 79" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>';
+ return '<svg viewBox="0 0 140 215" class="avatar act-'+(ac?ac.act:'hop')+'" xmlns="http://www.w3.org/2000/svg"><ellipse cx="70" cy="207" rx="42" ry="6" fill="#0f172a" fill-opacity=".18"/><g class="actbody"><g transform="translate(10,0)"><g class="bob">'+S('back')+
+  '<rect x="34" y="148" width="26" height="52" fill="#84cc16" stroke="#4d7c0f" stroke-width="2"/><rect x="60" y="148" width="26" height="52" fill="#84cc16" stroke="#4d7c0f" stroke-width="2"/>'+
+  '<rect x="28" y="94" width="64" height="54" fill="#2563eb" stroke="#1e3a8a" stroke-width="2"/>'+S('body')+
+  '<g class="armL'+pc+'"'+pl+'>'+armL+'</g><g class="armR'+pc+'"'+pr+'>'+armR+'</g>'+
+  '<rect x="40" y="50" width="40" height="40" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>'+
+  '<g class="eyes">'+eyes+'</g>'+mouth+S('face')+S('head')+'</g></g></g></svg>';
+}
+function playAction(el){ const sv=el.querySelector('svg'); if(!sv) return; sv.classList.remove('acting'); void sv.getBoundingClientRect(); sv.classList.add('acting'); }
+function bindAction(el){ el.onmouseenter=()=>playAction(el); el.onclick=()=>playAction(el); }   // マウスを乗せる／タップで動く
+function renderMenu(){
+ $('menu-avatar').innerHTML=avatarSVG(SAVE.equipped); bindAction($('menu-avatar'));
+ $('collect-count').textContent=SAVE.owned.filter(id=>ITEM[id]&&ITEM[id].subject!=='limited').length+'/'+ITEMS.length;
+ $('menu-pet').innerHTML=SAVE.pet?petSVG(SAVE.pet):'';
+ renderMission();
+}
+let newsRun=false;
+function todayKey(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function addStamp(){
+ if(totalTypedCount<30) return null;
+ const t=todayKey(), mk=t.slice(0,7); SAVE.stamps=SAVE.stamps||{}; SAVE.rewards=SAVE.rewards||{};
+ const arr=SAVE.stamps[mk]=SAVE.stamps[mk]||[];
+ if(arr.includes(t)) return {already:true,count:arr.length};
+ arr.push(t); let got=null;
+ if(arr.length>=20&&!SAVE.rewards[mk]){ const id='m'+mk.slice(5); SAVE.rewards[mk]=true; if(!SAVE.owned.includes(id)) SAVE.owned.push(id); SAVE.equipped[ITEM[id].slot]=id; got=ITEM[id]; }
+ persist(); return {count:arr.length,got,month:+mk.slice(5)};
+}
+function showStamp(r){
+ const box=$('drop-box'); if(!r) return;
+ if(r.got){ box.className='text-center p-3 border-2 rounded-xl font-bold text-slate-800 bg-fuchsia-50 border-fuchsia-400'; box.innerHTML='<div class="text-3xl">'+r.got.icon+'</div>🎉 '+r.month+'月のスタンプ20こ達成！<br>げんていそうび「'+r.got.name+'」をゲット！<div class="text-xs font-normal text-slate-500">トップ画面で身につけているよ</div>'; }
+ else if(r.already){ box.className='text-center p-2 border-2 rounded-xl text-sm bg-slate-50 border-slate-200 text-slate-600'; box.textContent='今日のスタンプはもらい済み。また明日！（今月 '+Math.min(r.count,20)+'/20）'; }
+ else { box.className='text-center p-3 border-2 rounded-xl font-bold bg-amber-50 border-amber-300 text-slate-800'; box.innerHTML='<div class="text-3xl">🌟</div>今日のスタンプ ゲット！　今月 '+Math.min(r.count,20)+'/20'; }
+}
+function renderMission(){
+ const d=new Date(), t=todayKey(), mk=t.slice(0,7), arr=(SAVE.stamps&&SAVE.stamps[mk])||[], done=arr.includes(t), n=arr.length, month=d.getMonth()+1;
+ const lim=ITEM['m'+mk.slice(5)], rewarded=SAVE.rewards&&SAVE.rewards[mk];
+ const chances=new Date(d.getFullYear(),month,0).getDate()-d.getDate()+(done?0:1);
+ let slots=''; for(let i=0;i<20;i++){ const f=i<n, last=i===19;
+  slots+='<span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm '+(last?(rewarded?'bg-fuchsia-200 border-2 border-fuchsia-400':'border-2 border-dashed border-fuchsia-400 bg-fuchsia-50'):(f?'bg-amber-300':'bg-slate-100'))+'">'+(last?lim.icon:(f?'🌟':''))+'</span>'; }
+ const msg=rewarded?'✅ '+lim.name+' ゲット済み！':'あと'+Math.max(0,20-n)+'回で「'+lim.name+'」（のこり'+chances+'日）';
+ const btn=done?'<div class="flex-1 bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 text-center font-black text-emerald-700">✅ 今日のスタンプ ゲット！ また明日！</div>'
+  :'<button onclick="initNewsMode()" class="mission-pulse flex-1 bg-gradient-to-r from-orange-500 to-amber-400 text-white font-black rounded-2xl p-3 shadow-lg text-lg">📰 今日のミッション<br><span class="text-sm font-bold">ニュースを1回タイピングして スタンプをもらおう！</span></button>';
+ $('mission-card').innerHTML='<div class="flex flex-col sm:flex-row gap-3 items-stretch">'+btn+'<div class="sm:w-80 bg-white border-2 border-slate-200 rounded-2xl p-3"><div class="text-xs font-bold text-slate-500 mb-2">'+month+'月のスタンプ '+Math.min(n,20)+'/20　<span class="text-fuchsia-600">'+msg+'</span></div><div class="grid grid-cols-10 gap-1">'+slots+'</div></div></div>';
+}
+function openInventory(){ renderInventory(); $('inv-modal').classList.remove('hidden'); }
+function closeInventory(){ $('inv-modal').classList.add('hidden'); renderMenu(); }
+function renderInventory(){ renderPets();
+ $('inv-avatar').innerHTML=avatarSVG(SAVE.equipped); bindAction($('inv-avatar'));
+ $('inv-count').textContent=SAVE.owned.filter(id=>ITEM[id].subject!=='limited').length+'/'+ITEMS.length+'　げんてい '+SAVE.owned.filter(id=>ITEM[id].subject==='limited').length+'/'+LIMITED.length;
+ const grid=$('inv-grid'); grid.innerHTML='';
+ ITEMS.concat(LIMITED).forEach(it=>{
+  const own=SAVE.owned.includes(it.id), on=SAVE.equipped[it.slot]===it.id, b=document.createElement('button');
+  b.className='p-2 rounded-xl border-2 text-center text-xs '+(own?(on?'border-orange-500 bg-orange-50':'border-slate-200 bg-white hover:border-indigo-300'):'border-dashed border-slate-200 bg-slate-100 text-slate-400');
+  const tag='<div class="text-[10px] text-slate-400">'+SLOT_NAME[it.slot]+'</div>';
+  b.innerHTML=own?tag+'<div class="text-2xl">'+it.icon+'</div><div class="font-bold">'+it.name+'</div><div>'+RSTAR[it.rarity]+(on?' ✔そうび中':'')+'</div>'
+                 :tag+'<div class="text-2xl">❓</div><div>'+(it.subject==='limited'?it.month+'月のスタンプ20こ':SUBJ_NAME[it.subject]+'の単元で…')+'</div><div>'+RSTAR[it.rarity]+'</div>';
+  if(own) b.onclick=()=>{ if(on) delete SAVE.equipped[it.slot]; else SAVE.equipped[it.slot]=it.id; persist(); renderInventory(); playAction($('inv-avatar')); };
+  grid.appendChild(b);
+ });
+}
+let gameCtx=null, runIsMiss=false;
+function rollDrop(acc){
+ if(!gameCtx||runIsMiss||totalTypedCount<20||acc<0.8) return null;
+ const key=gameCtx.subject+':'+gameCtx.unit, first=!SAVE.cleared[key];
+ SAVE.cleared[key]=true;
+ if(!first&&Math.random()>0.3){ persist(); return null; }       // 2回目以降は3割
+ const pool=ITEMS.filter(i=>i.subject===gameCtx.subject&&!SAVE.owned.includes(i.id));
+ if(!pool.length){ persist(); return {complete:true}; }
+ const want=acc>=0.97?2:acc>=0.9?1:0;                              // 正確さが高いほどレア
+ pool.sort((a,b)=>Math.abs(RANK.indexOf(a.rarity)-want)-Math.abs(RANK.indexOf(b.rarity)-want)||Math.random()-.5);
+ const item=pool[0]; SAVE.owned.push(item.id); SAVE.equipped[item.slot]=item.id; persist();
+ return {item};
+}
+function showDrop(acc){
+ const d=rollDrop(acc), box=$('drop-box');
+ if(d&&d.item){
+  const c={common:'bg-amber-50 border-amber-300',rare:'bg-sky-50 border-sky-400',epic:'bg-fuchsia-50 border-fuchsia-400'}[d.item.rarity];
+  box.className='text-center p-3 border-2 rounded-xl font-bold text-slate-800 '+c;
+  box.innerHTML='<div class="text-3xl">'+d.item.icon+'</div>NEW！ '+SUBJ_NAME[d.item.subject]+'のそうび「'+d.item.name+'」 '+RSTAR[d.item.rarity]+'<div class="text-xs font-normal text-slate-500">トップ画面で身につけているよ</div>';
+ } else if(d&&d.complete){
+  box.className='text-center p-2 border-2 rounded-xl font-bold bg-emerald-50 border-emerald-300 text-slate-800';
+  box.textContent='🎉 '+SUBJ_NAME[gameCtx.subject]+'のそうびは ぜんぶそろった！';
+ } else if(questMode&&gameCtx&&!runIsMiss&&acc<0.8){
+  box.className='text-center p-2 border-2 rounded-xl text-sm bg-slate-50 border-slate-200 text-slate-600'; box.textContent='せいかくりつ80%以上でクリアすると、そうびが出るよ！';
+ } else box.className='hidden';
+}
+const PETS=[
+ {id:'p1',name:'ミニ・スフィンクス',cond:'kokugo',desc:'国語のそうびを ぜんぶ集める'},
+ {id:'p2',name:'ミニ・フェニックス',cond:'rika',desc:'理科のそうびを ぜんぶ集める'},
+ {id:'p3',name:'ミニ・ケルベロス',cond:'shakai',desc:'社会のそうびを ぜんぶ集める'},
+ {id:'p4',name:'ミニ・ドラゴン',cond:'all',desc:'3教科ぜんぶ集める'}];
+const PET_SVG={
+ p1:'<g stroke="#92400e" stroke-width="2" stroke-linejoin="round"><path d="M20 58 Q4 42 14 26 Q22 42 32 52Z" fill="#fef3c7"/><path d="M80 58 Q96 42 86 26 Q78 42 68 52Z" fill="#fef3c7"/><path d="M76 72 Q98 74 92 52" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round"/><ellipse cx="50" cy="70" rx="28" ry="17" fill="#fbbf24"/><polygon points="32,28 34,8 47,22" fill="#fbbf24"/><polygon points="68,28 66,8 53,22" fill="#fbbf24"/><circle cx="50" cy="40" r="20" fill="#fbbf24"/><polygon points="30,34 35,64 41,42" fill="#38bdf8"/><polygon points="70,34 65,64 59,42" fill="#38bdf8"/><rect x="32" y="22" width="36" height="6" fill="#38bdf8"/><ellipse cx="38" cy="86" rx="9" ry="6" fill="#fbbf24"/><ellipse cx="62" cy="86" rx="9" ry="6" fill="#fbbf24"/></g><circle cx="43" cy="42" r="3" fill="#1f2937"/><circle cx="57" cy="42" r="3" fill="#1f2937"/><polygon points="47,48 53,48 50,52" fill="#f472b6"/><path d="M44 54 Q50 59 56 54" stroke="#1f2937" stroke-width="2" fill="none" stroke-linecap="round"/>',
+ p2:'<g stroke="#9a3412" stroke-width="2" stroke-linejoin="round"><path d="M38 70 Q18 86 26 98 Q36 88 44 80Z" fill="#ef4444"/><path d="M50 74 Q44 94 54 100 Q58 90 56 76Z" fill="#f97316"/><path d="M62 70 Q82 86 74 98 Q64 88 56 80Z" fill="#fbbf24"/><path d="M30 54 Q4 46 8 24 Q24 30 34 42Z" fill="#ef4444"/><path d="M70 54 Q96 46 92 24 Q76 30 66 42Z" fill="#ef4444"/><ellipse cx="50" cy="58" rx="22" ry="20" fill="#f97316"/><ellipse cx="50" cy="64" rx="13" ry="12" fill="#fde68a" stroke="none"/><circle cx="50" cy="32" r="14" fill="#fb923c"/><path d="M40 20 Q36 6 46 12 Q50 2 54 12 Q64 6 60 20Z" fill="#fbbf24"/><polygon points="44,33 56,33 50,43" fill="#fde047"/></g><circle cx="44" cy="29" r="2.5" fill="#1f2937"/><circle cx="56" cy="29" r="2.5" fill="#1f2937"/>',
+ p3:'<g stroke="#111827" stroke-width="2" stroke-linejoin="round"><path d="M80 66 Q98 56 92 38" fill="none" stroke="#374151" stroke-width="7" stroke-linecap="round"/><circle cx="92" cy="34" r="6" fill="#f97316"/><ellipse cx="50" cy="72" rx="30" ry="18" fill="#374151"/><rect x="26" y="82" width="9" height="14" rx="4" fill="#374151"/><rect x="41" y="84" width="9" height="12" rx="4" fill="#374151"/><rect x="56" y="84" width="9" height="12" rx="4" fill="#374151"/><rect x="70" y="82" width="9" height="14" rx="4" fill="#374151"/><polygon points="14,40 14,18 26,30" fill="#4b5563"/><polygon points="42,22 40,2 54,14" fill="#4b5563"/><polygon points="58,22 60,2 46,14" fill="#4b5563"/><polygon points="86,40 86,18 74,30" fill="#4b5563"/><circle cx="28" cy="48" r="13" fill="#4b5563"/><circle cx="72" cy="48" r="13" fill="#4b5563"/><circle cx="50" cy="34" r="16" fill="#6b7280"/></g><g fill="#ef4444"><circle cx="23" cy="46" r="3.5"/><circle cx="33" cy="46" r="3.5"/><circle cx="67" cy="46" r="3.5"/><circle cx="77" cy="46" r="3.5"/><circle cx="44" cy="32" r="4"/><circle cx="56" cy="32" r="4"/></g><g fill="#fff"><polygon points="44,42 48,42 46,48"/><polygon points="52,42 56,42 54,48"/></g><path d="M44 42 H56" stroke="#111827" stroke-width="2"/>',
+ p4:'<g stroke="#166534" stroke-width="2" stroke-linejoin="round"><path d="M26 56 Q2 42 10 18 Q20 34 36 46Z" fill="#a78bfa"/><path d="M74 56 Q98 42 90 18 Q80 34 64 46Z" fill="#a78bfa"/><path d="M76 74 Q100 78 94 96 Q88 84 70 84Z" fill="#4ade80"/><ellipse cx="50" cy="68" rx="26" ry="22" fill="#4ade80"/><ellipse cx="50" cy="74" rx="15" ry="14" fill="#bbf7d0" stroke="none"/><polygon points="38,24 34,6 48,18" fill="#fde047"/><polygon points="62,24 66,6 52,18" fill="#fde047"/><circle cx="50" cy="36" r="17" fill="#4ade80"/><ellipse cx="50" cy="44" rx="10" ry="7" fill="#bbf7d0"/><polygon points="62,52 70,46 70,58" fill="#22c55e"/></g><circle cx="43" cy="33" r="3.5" fill="#fde047" stroke="#1f2937" stroke-width="1.5"/><circle cx="57" cy="33" r="3.5" fill="#fde047" stroke="#1f2937" stroke-width="1.5"/><circle cx="46" cy="44" r="1.5" fill="#166534"/><circle cx="54" cy="44" r="1.5" fill="#166534"/>'};
+function petSVG(id){ return '<svg viewBox="0 0 100 100" class="pet w-full h-full" xmlns="http://www.w3.org/2000/svg">'+PET_SVG[id]+'</svg>'; }
+function petUnlocked(p){ const done=k=>ITEMS.filter(i=>i.subject===k).every(i=>SAVE.owned.includes(i.id)); return p.cond==='all'?['kokugo','rika','shakai'].every(done):done(p.cond); }
+function checkPets(){
+ SAVE.pets=SAVE.pets||[]; const nw=PETS.filter(p=>!SAVE.pets.includes(p.id)&&petUnlocked(p));
+ nw.forEach(p=>{ SAVE.pets.push(p.id); if(!SAVE.pet) SAVE.pet=p.id; }); if(nw.length) persist(); return nw;
+}
+function showPets(nw){
+ if(!nw.length) return; const box=$('drop-box');
+ const html=nw.map(p=>'<div class="mt-2 p-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 text-center font-bold"><div class="w-16 h-16 mx-auto">'+petSVG(p.id)+'</div>🐾 ペット「'+p.name+'」が なかまになった！<div class="text-xs font-normal text-slate-500">トップ画面で いっしょにいるよ</div></div>').join('');
+ if(box.className.indexOf('hidden')>=0){ box.className=''; box.innerHTML=html; } else box.innerHTML+=html;
+}
+function renderPets(){
+ const g=$('inv-pets'); g.innerHTML=''; SAVE.pets=SAVE.pets||[];
+ PETS.forEach(p=>{ const own=SAVE.pets.includes(p.id), on=SAVE.pet===p.id, b=document.createElement('button');
+  b.className='p-2 rounded-xl border-2 text-center text-xs '+(own?(on?'border-orange-500 bg-orange-50':'border-slate-200 bg-white hover:border-indigo-300'):'border-dashed border-slate-200 bg-slate-100 text-slate-400');
+  b.innerHTML=own?'<div class="w-14 h-14 mx-auto">'+petSVG(p.id)+'</div><div class="font-bold">'+p.name+'</div><div>'+(on?'✔ いっしょ':'')+'</div>':'<div class="text-2xl">❓</div><div>'+p.desc+'</div>';
+  if(own) b.onclick=()=>{ SAVE.pet=on?null:p.id; persist(); renderInventory(); };
+  g.appendChild(b); });
+}
+let importPending='';
+function backupMsg(t){ $('backup-msg').textContent=t; }
+function exportCode(){
+ const code=btoa(unescape(encodeURIComponent(JSON.stringify(SAVE)))), box=$('backup-box');
+ box.classList.remove('hidden'); box.value=code; importPending=''; box.focus(); box.select();
+ let ok=false;
+ try{ ok=document.execCommand('copy'); }catch(e){}
+ if(!ok&&navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(()=>backupMsg('コピーしました。メモ帳などに貼り付けて保存してね。')).catch(()=>backupMsg('自動コピーできませんでした。上の文字をすべて選んで、Ctrl+C でコピーしてね。')); backupMsg('上の文字が きろくのコードです。メモ帳などにコピーして保存してね。'); return; }
+ backupMsg(ok?'コピーしました。メモ帳などに貼り付けて保存してね。':'自動コピーできませんでした。上の文字をすべて選んで、Ctrl+C でコピーしてね。');
+}
+function importCode(){
+ const box=$('backup-box'), c=(box.value||'').trim();
+ if(box.classList.contains('hidden')||!c){ box.classList.remove('hidden'); box.value=''; box.focus(); importPending=''; backupMsg('保存したコードを上の枠に貼り付けて、もういちど「コードを読み込む」を押してね。'); return; }
+ let j; try{ j=JSON.parse(decodeURIComponent(escape(atob(c)))); if(!j||!Array.isArray(j.owned)) throw 0; }catch(e){ backupMsg('コードが正しくないようです。コピーし直してみてね。'); importPending=''; return; }
+ if(importPending!==c){ importPending=c; backupMsg('そうび '+j.owned.length+'こ のきろくです。いまの記録は置きかわります。よければ、もういちど「コードを読み込む」を押してね。'); return; }
+ SAVE=Object.assign({owned:[],equipped:{},cleared:{}},j); SAVE.owned=SAVE.owned.filter(id=>ITEM[id]);
+ Object.keys(SAVE.equipped).forEach(k=>{ if(!ITEM[SAVE.equipped[k]]) delete SAVE.equipped[k]; });
+ SAVE.pets=(SAVE.pets||[]).filter(id=>PET_SVG[id]); if(!PET_SVG[SAVE.pet]) SAVE.pet=null;
+ persist(); importPending=''; renderInventory(); renderMenu(); backupMsg('読み込みました！');
+}
+// ---------- /そうび ----------
+
+// ---------- クエスト戦闘 ----------
+const MAXHP=5;
+let questMode=false, locked=false, playerHP=MAXHP, questTotal=0, questDone=0, sentDone=0, enemyLv=0, enemyStage=0;
+const ENEMY_COL={kokugo:{body:'#4338ca',dark:'#1e1b4b',hl:'#a5b4fc'},rika:{body:'#4ade80',dark:'#166534',hl:'#dcfce7'},shakai:{body:'#f5f5f4',dark:'#78716c',hl:'#ffffff'}};
+const ENEMY_NAME={kokugo:['インクぼうや','ぷんぷんインク','みつめインク','おおぐちインク','よつめインク','ぬりつぶしの王'],
+ rika:['ぷよぷよスライム','おこりスライム','みつめスライム','ぱっくりスライム','よつめスライム','ばくはつの王'],
+ shakai:['ちびゴースト','おこりゴースト','みつめゴースト','あんぐりゴースト','よつめゴースト','ちずぬすみの王']};
+const ENEMIES={
+ kokugo:[
+  {c:['#6366f1','#312e81'],shape:'round',legs:'two',arms:'short',ant:1,n:2,er:12,mouth:'smile'},
+  {c:['#f43f5e','#9f1239'],shape:'pear',legs:'two',arms:'short',ears:1,n:2,angry:1,mouth:'fangs'},
+  {c:['#a855f7','#581c87'],shape:'tall',legs:'two',arms:'up',n:3,mouth:'open',spots:1,ey:62},
+  {c:['#1f2937','#030712'],shape:'round',fur:1,legs:'two',arms:'short',stalk:1,mouth:'tongue'},
+  {c:['#0d9488','#134e4a'],shape:'square',legs:'two',arms:'up',n:4,ant:1,angry:1,mouth:'wide'},
+  {c:['#7c3aed','#2e1065'],shape:'pear',wings:1,horns:1,legs:'two',arms:'short',n:1,mouth:'wide',sc:1.12}],
+ rika:[
+  {c:['#4ade80','#166534'],shape:'slime',n:2,er:12,mouth:'smile',ey:80,my:106},
+  {c:['#a3e635','#3f6212'],shape:'slime',n:2,angry:1,ant:1,mouth:'flat',ey:80,my:106},
+  {c:['#8b5cf6','#4c1d95'],shape:'round',legs:'tent',stalk:1,mouth:'smile',my:92},
+  {c:['#38bdf8','#075985'],shape:'pear',fur:1,legs:'two',arms:'up',n:2,er:11,mouth:'open'},
+  {c:['#fbbf24','#92400e'],shape:'pear',tail:1,legs:'four',arms:'short',spots:1,n:4,angry:1,mouth:'fangs'},
+  {c:['#c4b5fd','#5b21b6'],shape:'tall',fur:1,legs:'two',arms:'up',n:1,mouth:'open',horns:1,belly:1,sc:1.12,ey:60,my:92}],
+ shakai:[
+  {c:['#f5f5f4','#78716c'],shape:'ghost',n:2,er:12,mouth:'smile'},
+  {c:['#e7e5e4','#57534e'],shape:'ghost',ears:1,n:2,angry:1,mouth:'flat'},
+  {c:['#a3e635','#4d7c0f'],shape:'tall',wings:1,ears:1,legs:'two',arms:'short',n:3,mouth:'wide',belly:1,ey:62,my:94},
+  {c:['#262626','#000000'],shape:'round',bow:1,legs:'two',arms:'short',n:3,mouth:'tongue',spots:1},
+  {c:['#64748b','#1e293b'],shape:'square',tail:1,legs:'two',arms:'up',n:4,angry:1,mouth:'fangs',ant:1},
+  {c:['#f59e0b','#78350f'],shape:'ghost',crown:1,horns:1,wings:1,n:5,angry:1,mouth:'wide',sc:1.12,ey:74}]
+};
+function monster(g,stage,ko){
+ const B=g.c[0], D=g.c[1], ey=g.ey||70, my=g.my||98, er=g.er||10, K='stroke="'+D+'" stroke-width="3"';
+ const grp=(f,x)=>'<g fill="'+f+'" '+K+' stroke-linejoin="round">'+x+'</g>';
+ let back='', top='', legs='', arms='', face='', extra='';
+ if(g.wings) back+='<g fill="'+D+'" stroke="'+D+'" stroke-width="2" stroke-linejoin="round"><path d="M34 70 L2 42 Q6 62 12 72 Q18 66 24 76 Q30 70 36 84Z"/><path d="M106 70 L138 42 Q134 62 128 72 Q122 66 116 76 Q110 70 104 84Z"/></g>';
+ if(g.tail) back+=grp(B,'<path d="M98 108 Q132 112 128 140 Q116 124 96 122Z"/>');
+ if(g.horns) top+='<g fill="#ef4444" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"><polygon points="44,46 36,14 60,36"/><polygon points="96,46 104,14 80,36"/></g>';
+ if(g.ears) top+=grp(B,'<polygon points="36,58 26,22 60,40"/><polygon points="104,58 114,22 80,40"/>');
+ if(g.ant) top+='<g stroke="'+D+'" stroke-width="3" fill="none" stroke-linecap="round"><path d="M56 40 Q50 16 32 14"/><path d="M84 40 Q90 16 108 14"/></g><circle cx="32" cy="14" r="5" fill="'+B+'" '+K+'/><circle cx="108" cy="14" r="5" fill="'+B+'" '+K+'/>';
+ if(g.legs==='two') legs=grp(B,'<rect x="46" y="108" width="16" height="28" rx="7"/><rect x="78" y="108" width="16" height="28" rx="7"/>');
+ if(g.legs==='four') legs=grp(B,'<rect x="36" y="110" width="14" height="24" rx="6"/><rect x="54" y="114" width="14" height="22" rx="6"/><rect x="72" y="114" width="14" height="22" rx="6"/><rect x="90" y="110" width="14" height="24" rx="6"/>');
+ if(g.legs==='tent'){ const t='<path d="M44 106 Q36 124 48 140"/><path d="M58 112 Q54 130 62 146"/><path d="M82 112 Q86 130 78 146"/><path d="M96 106 Q104 124 92 140"/>'; legs='<g fill="none" stroke-linecap="round"><g stroke="'+D+'" stroke-width="13">'+t+'</g><g stroke="'+B+'" stroke-width="7">'+t+'</g></g>'; }
+ const bodies={round:'<ellipse cx="70" cy="78" rx="42" ry="40"/>',tall:'<rect x="38" y="30" width="64" height="94" rx="30"/>',
+  pear:'<path d="M70 30 Q104 30 108 76 Q114 124 70 124 Q26 124 32 76 Q36 30 70 30Z"/>',square:'<rect x="32" y="38" width="76" height="84" rx="14"/>',
+  slime:'<path d="M14 124 Q14 40 70 40 Q126 40 126 124 Q70 136 14 124Z"/>',
+  ghost:'<path d="M24 128 V72 Q24 26 70 26 Q116 26 116 72 V128 L100 114 L85 128 L70 114 L55 128 L40 114 Z"/>'};
+ let fur=''; if(g.fur){ for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; fur+='<circle cx="'+(70+44*Math.cos(a)).toFixed(1)+'" cy="'+(78+44*Math.sin(a)*(g.shape==='tall'?1.1:0.95)).toFixed(1)+'" r="10"/>'; } fur=grp(B,fur); }
+ let body='<g fill="'+B+'" '+(g.fur?'':K)+' stroke-linejoin="round">'+bodies[g.shape]+'</g>';
+ if(g.belly) body+='<ellipse cx="70" cy="100" rx="22" ry="16" fill="#fff" fill-opacity=".35"/>';
+ if(g.spots) body+='<g fill="'+D+'" fill-opacity=".4"><circle cx="50" cy="60" r="6"/><circle cx="90" cy="96" r="7"/><circle cx="96" cy="56" r="5"/><circle cx="52" cy="100" r="5"/></g>';
+ body+='<ellipse cx="48" cy="48" rx="13" ry="6" fill="#fff" fill-opacity=".45" transform="rotate(-25 48 48)"/>';
+ if(g.arms==='short') arms=grp(B,'<ellipse cx="26" cy="86" rx="9" ry="15" transform="rotate(20 26 86)"/><ellipse cx="114" cy="86" rx="9" ry="15" transform="rotate(-20 114 86)"/>');
+ if(g.arms==='up') arms='<g fill="none" stroke-linecap="round"><g stroke="'+D+'" stroke-width="11"><path d="M36 86 Q14 70 20 40"/><path d="M104 86 Q126 70 120 40"/></g><g stroke="'+B+'" stroke-width="5"><path d="M36 86 Q14 70 20 40"/><path d="M104 86 Q126 70 120 40"/></g></g><circle cx="20" cy="38" r="7" fill="'+B+'" '+K+'/><circle cx="120" cy="38" r="7" fill="'+B+'" '+K+'/>';
+ // 目
+ let P, r=er;
+ if(g.stalk){ P=[[42,24],[98,24]]; face+='<g stroke="'+D+'" stroke-width="4" fill="none" stroke-linecap="round"><path d="M56 42 Q46 38 42 28"/><path d="M84 42 Q94 38 98 28"/></g>'; r=11; }
+ else { r=g.n===1?17:er; P={1:[[70,ey]],2:[[52,ey],[88,ey]],3:[[44,ey+2],[70,ey-12],[96,ey+2]],4:[[38,ey+8],[58,ey-6],[82,ey-6],[102,ey+8]],5:[[34,ey+10],[52,ey-6],[70,ey-14],[88,ey-6],[106,ey+10]]}[g.n||2]; }
+ P.forEach(([x,y])=>{ face+=ko?'<path d="M'+(x-6)+' '+(y-6)+' L'+(x+6)+' '+(y+6)+' M'+(x+6)+' '+(y-6)+' L'+(x-6)+' '+(y+6)+'" stroke="#111827" stroke-width="3" fill="none"/>'
+  :'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#fff" stroke="#111827" stroke-width="2"/><circle cx="'+(x+2)+'" cy="'+(y+1)+'" r="'+(r*0.45)+'" fill="#111827"/>'; });
+ if(g.angry&&!ko){ const a=P[0], b=P[P.length-1]; face+='<path d="M'+(a[0]-r-2)+' '+(a[1]-r-6)+' L'+(a[0]+r)+' '+(a[1]-r+2)+' M'+(b[0]+r+2)+' '+(b[1]-r-6)+' L'+(b[0]-r)+' '+(b[1]-r+2)+'" stroke="#111827" stroke-width="4" stroke-linecap="round" fill="none"/>'; }
+ // 口
+ const ln=d=>'<path d="'+d+'" stroke="#111827" stroke-width="3" fill="none" stroke-linecap="round"/>', m=g.mouth;
+ if(ko) face+=ln('M56 '+(my+8)+' Q70 '+(my)+' 84 '+(my+8));
+ else if(m==='smile') face+=ln('M56 '+my+' Q70 '+(my+13)+' 84 '+my);
+ else if(m==='flat') face+=ln('M54 '+(my+5)+' H86');
+ else if(m==='tongue') face+=ln('M54 '+my+' Q70 '+(my+14)+' 86 '+my)+'<ellipse cx="78" cy="'+(my+14)+'" rx="6" ry="10" fill="#f43f5e" stroke="#111827" stroke-width="2"/>';
+ else if(m==='open') face+='<ellipse cx="70" cy="'+(my+7)+'" rx="15" ry="12" fill="#111827"/><ellipse cx="70" cy="'+(my+13)+'" rx="9" ry="6" fill="#f43f5e"/>';
+ else { face+='<path d="M44 '+my+' Q70 '+(my+36)+' 96 '+my+' Z" fill="#111827"/>'; (m==='fangs'?[54,78]:[48,59,70,81]).forEach(x=>{ face+='<polygon points="'+x+','+(my+1)+' '+(x+(m==='fangs'?10:8))+','+(my+1)+' '+(x+(m==='fangs'?5:4))+','+(my+(m==='fangs'?16:12))+'" fill="#fff"/>'; }); }
+ if(g.bow) extra+='<g fill="#ef4444" stroke="#7f1d1d" stroke-width="2"><path d="M70 36 L46 22 L46 48Z"/><path d="M70 36 L94 22 L94 48Z"/><circle cx="70" cy="36" r="6"/></g>';
+ if(g.crown) extra+='<polygon points="46,34 50,10 60,24 70,6 80,24 90,10 94,34" fill="#fde047" stroke="#a16207" stroke-width="2.5" stroke-linejoin="round"/>';
+ const BP=[[40,58,-25],[98,64,20],[62,112,-10],[88,94,30]]; let bands='';
+ BP.forEach((q,i)=>{ if(stage>i) bands+='<g transform="rotate('+q[2]+' '+q[0]+' '+q[1]+')"><rect x="'+(q[0]-15)+'" y="'+(q[1]-6)+'" width="30" height="12" rx="6" fill="#fcd9a8" stroke="#d6a36a" stroke-width="1.5"/><rect x="'+(q[0]-6)+'" y="'+(q[1]-6)+'" width="12" height="12" fill="#f3b97c"/></g>'; });
+ const inner=back+top+legs+fur+body+arms+face+extra+bands, sc=g.sc||1;
+ return '<svg viewBox="0 0 140 150" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">'+(sc!==1?'<g transform="translate(70 144) scale('+sc+') translate(-70 -144)">'+inner+'</g>':inner)+'</svg>';
+}
+function enemySVG(subj,lv,stage,ko){ return monster(ENEMIES[subj][lv]||ENEMIES[subj][0],stage,ko); }
+// ---- 効果音（短く、文の区切りでだけ鳴らす）----
+function tone(f0,f1,dur,type,vol,delay){ if(isMuted||!audioCtx) return; try{ const t=audioCtx.currentTime+(delay||0), o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=type; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+dur+0.02); }catch(e){} }
+function sfxEncounter(){ tone(150,55,.45,'sawtooth',.06); tone(230,110,.35,'square',.03,.05); tone(392,392,.09,'square',.04,.4); tone(466,466,.16,'square',.04,.5); }
+function sfxAttack(){ tone(900,250,.11,'triangle',.06); tone(140,50,.12,'sine',.08,.09); }
+function sfxKO(){ tone(500,110,.5,'sawtooth',.045); tone(330,523,.1,'square',.035,.55); tone(523,784,.2,'square',.035,.67); }
+function showEncounter(u,lv){ $('pat-b-enemy').innerHTML='<div class="w-28 h-28">'+enemySVG(u.subject,lv,0,false)+'</div><div class="font-black text-red-600 text-center">⚔️ '+ENEMY_NAME[u.subject][lv]+'があらわれた！</div>'; }
+function bump(el,cls,ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(()=>el.classList.remove(cls),ms); }
+function renderHP(){
+ $('bt-hearts').textContent='❤️'.repeat(playerHP)+'🤍'.repeat(MAXHP-playerHP);
+ const pos=[[48,18],[20,52],[62,60],[28,30],[54,42]];
+ $('bt-bandages').innerHTML=pos.slice(0,MAXHP-playerHP).map(p=>'<span class="absolute text-base" style="left:'+p[0]+'%;top:'+p[1]+'%">🩹</span>').join('');
+}
+function setupBattle(){
+ const subj=gameCtx.subject, units=textbookData[subj].units;
+ enemyLv=Math.max(0,units.findIndex(u=>u.title===gameCtx.unit)); enemyStage=0; playerHP=MAXHP; locked=false;
+ questTotal=playSentences.reduce((a,x)=>a+x.nodes.filter(n=>n.type==='char').length,0); questDone=0; sentDone=0;
+ $('bt-player').innerHTML=avatarSVG(SAVE.equipped); $('bt-pet').innerHTML=SAVE.pet?petSVG(SAVE.pet):'';
+ $('bt-enemy').classList.remove('bt-ko'); $('bt-enemy').innerHTML=enemySVG(subj,enemyLv,0,false);
+ $('bt-ename').textContent=ENEMY_NAME[subj][enemyLv]+(enemyLv>=5?'（ボス）':'　Lv.'+(enemyLv+1));
+ $('bt-hp').style.width='100%'; $('bt-msg').classList.add('hidden'); renderHP();
+}
+function updateBattle(){
+ const pct=questTotal?Math.max(0,1-questDone/questTotal):1;
+ $('bt-hp').style.width=(pct*100)+'%';
+ const st=Math.min(4,Math.floor((1-pct)*5));
+ if(st!==enemyStage){ enemyStage=st; $('bt-enemy').innerHTML=enemySVG(gameCtx.subject,enemyLv,st,false); }
+}
+function battleAttack(){ bump($('bt-player'),'bt-attack',500); setTimeout(()=>{ bump($('bt-enemy'),'bt-hurt',400); sfxAttack(); },220); }
+function battleMiss(){
+ playerHP--; bump($('bt-player'),'bt-hit',400); renderHP();
+ if(playerHP<=0) playerDown();
+}
+function playerDown(){
+ locked=true; $('bt-msg').textContent='ダウン！ もういちど！'; $('bt-msg').classList.remove('hidden');
+ questDone=Math.max(0,questDone-sentDone); sentDone=0; updateBattle();   // 敵は少し回復
+ playSentences[currentSentenceIndex].log=[];
+ clearTimeout(gameTimer);
+ gameTimer=setTimeout(()=>{ if(!isPlaying) return; playerHP=MAXHP; $('bt-msg').classList.add('hidden'); locked=false; loadSentence(); sentenceMissed=true; renderHP(); },1400);
+}
+function enemyKO(){ sfxKO(); $('bt-enemy').innerHTML=enemySVG(gameCtx.subject,enemyLv,4,true); $('bt-enemy').classList.add('bt-ko'); $('bt-hp').style.width='0%'; }
+// ---------- /クエスト戦闘 ----------
+
 // ---------- 状態 ----------
 let kuroshiro=null, audioCtx=null, isMuted=false, gameTimer=null;
 let globalSentences=[], playSentences=[], missedSentencesForNextRun=[];
@@ -290,6 +682,7 @@ const $ = id => document.getElementById(id);
 function switchScreen(id){
  ['news-intro-screen','main-menu','setup-screen','pattern-a-screen','pattern-b-screen','game-screen','result-screen'].forEach(s=>$(s).classList.add('hidden'));
  $(id).classList.remove('hidden');
+ if(id==='main-menu') renderMenu();
 }
 $('toggle-mute-btn').addEventListener('click',e=>{ isMuted=!isMuted; e.target.textContent=isMuted?'🔇':'🔊'; });
 function initAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); }
@@ -328,7 +721,7 @@ function parseKanaSentence(kanaStr){
 
 // ---------- ゲーム準備 ----------
 async function prepareAndStartCustomGame(lines,btn){
- initAudio(); const ot=btn.textContent; btn.disabled=true; btn.textContent='読み込み中...';
+ gameCtx=null; questMode=false; newsRun=false; initAudio(); const ot=btn.textContent; btn.disabled=true; btn.textContent='読み込み中...';
  try{
   if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
   globalSentences=[]; const bad=new Set();
@@ -387,7 +780,7 @@ function initPatternA(){
  });
 }
 $('pat-a-start-btn').addEventListener('click',()=>{
- if(!patAUnit) return; $('game-header-title').textContent=`教科書: ${patAUnit.title}`;
+ if(!patAUnit) return; gameCtx=null; questMode=false; newsRun=false; $('game-header-title').textContent=`練習: ${patAUnit.title}`;
  prepareAndStartPresetGame(patAUnit.sentences,$('pat-a-length').value,$('pat-a-random').checked);
 });
 function initPatternB(){
@@ -401,8 +794,9 @@ function initPatternB(){
    const uc=$('pat-b-units'); uc.innerHTML='';
    subj.units.forEach(u=>{
     const ub=document.createElement('button'); ub.className='p-6 bg-white border-2 border-slate-200 rounded-2xl text-left hover:border-yellow-400';
-    ub.innerHTML=`<div class="font-bold text-lg text-slate-700">${u.title}</div>`;
-    ub.onclick=()=>{ patBUnit=u; $('pat-b-modal-title').textContent=u.title; $('pat-b-modal').classList.remove('hidden'); $('pat-b-start-btn').className=`w-full text-white font-black py-4 rounded-xl shadow-lg text-xl ${subj.btn}`; };
+    const lv=subj.units.indexOf(u), done=SAVE.cleared[u.subject+':'+u.title];
+        ub.innerHTML=`<div class="flex items-center gap-3"><div class="w-14 h-14 shrink-0">${enemySVG(u.subject,lv,0,false)}</div><div><div class="font-bold text-lg text-slate-700">${u.title}${done?' ✅':''}</div><div class="text-xs text-slate-400">${ENEMY_NAME[u.subject][lv]}${lv>=5?'（ボス）':''}</div></div></div>`;
+    ub.onclick=()=>{ patBUnit=u; initAudio(); sfxEncounter(); showEncounter(u,lv); $('pat-b-modal-title').textContent=u.title; $('pat-b-modal').classList.remove('hidden'); $('pat-b-start-btn').className=`w-full text-white font-black py-4 rounded-xl shadow-lg text-xl ${subj.btn}`; };
     uc.appendChild(ub);
    });
   };
@@ -410,7 +804,7 @@ function initPatternB(){
  });
 }
 $('pat-b-start-btn').addEventListener('click',()=>{
- $('game-header-title').textContent=`クエスト: ${patBUnit.title}`;
+ gameCtx={subject:patBUnit.subject,unit:patBUnit.title}; questMode=true; newsRun=false; $('game-header-title').textContent=`クエスト: ${patBUnit.title}`;
  prepareAndStartPresetGame(patBUnit.sentences,$('pat-b-length').value,$('pat-b-random').checked);
  $('pat-b-modal').classList.add('hidden');
 });
@@ -423,16 +817,17 @@ async function loadNewsPack(){
  }catch(e){ /* ファイルを直接開いた場合や未配置の場合は内蔵データを使う */ }
 }
 function initNewsMode(){
- switchScreen('news-intro-screen'); const rn=newsPack[Math.floor(Math.random()*newsPack.length)];
+ switchScreen('news-intro-screen'); const rn=newsPack[Math.floor(new Date().setHours(0,0,0,0)/864e5)%newsPack.length];   // 1日1本（同じ日は同じ話題）
  const when=rn.date||newsUpdated;
  $('news-preview').innerHTML=`<span class="font-black text-indigo-700 text-xl">【${rn.title}】</span>`+(when?`<span class="ml-2 text-sm text-slate-400">${when}</span>`:'')+'<br><br>'+rn.sentences.map(s=>s.kanji).join('<br>');
- $('start-news-btn').onclick=()=>{ $('game-header-title').textContent=`キーワード: ${rn.title}`; prepareAndStartPresetGame(rn.sentences,'ALL',false); };
+ $('start-news-btn').onclick=()=>{ gameCtx=null; questMode=false; newsRun=true; $('game-header-title').textContent=`キーワード: ${rn.title}`; prepareAndStartPresetGame(rn.sentences,'ALL',false); };
 }
 window.addEventListener('DOMContentLoaded',()=>{ switchScreen('main-menu'); loadNewsPack(); });
 
 // ---------- ゲーム本体 ----------
-function startGame(sentences){
+function startGame(sentences,missRun=false){ runIsMiss=missRun;
  playSentences=sentences.map(s=>({...s,log:[]})); switchScreen('game-screen');
+ $('battle-bar').classList.toggle('hidden',!questMode); if(questMode) setupBattle();
  totalTypedCount=0; missCount=0; currentSentenceIndex=0; missedSentencesForNextRun=[]; missedKeyCounts={};
  applyHintLevel(); isPlaying=true; startTime=Date.now(); clearTimeout(gameTimer); loadSentence();
 }
@@ -442,7 +837,7 @@ const HINT_LABELS=['ヒント：読み＋キー','ヒント：キーだけ','ヒ
 function applyHintLevel(){
  $('hint-btn').textContent=HINT_LABELS[hintLevel];
  $('keyboard').classList.toggle('hidden',hintLevel===2);
- $('fingers').classList.toggle('hidden',hintLevel===2);
+ $('fingers').classList.toggle('hidden',hintLevel===2||questMode);
 }
 $('hint-btn').addEventListener('click',()=>{ hintLevel=(hintLevel+1)%3; try{localStorage.setItem('hintLevel',hintLevel);}catch(x){} applyHintLevel(); if(isPlaying) updateHighlighting(); });
 document.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) b.blur(); });  // スペースキーでボタンが反応しないように
@@ -487,8 +882,8 @@ function kanjiRange(L,fin){
 }
 function loadSentence(){
  if(!isPlaying) return;
- if(currentSentenceIndex>=playSentences.length){ finishGame(); return; }
- const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false;
+ if(currentSentenceIndex>=playSentences.length){ if(questMode){ enemyKO(); gameTimer=setTimeout(finishGame,1300); } else finishGame(); return; }
+ const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false; sentDone=0;
  const kd=$('kanji-display'); kd.innerHTML='';
  const chars=Array.from(s.kanji);
  chars.forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; kd.appendChild(sp); });
@@ -501,7 +896,8 @@ function skipNonTypableNodes(){
  updateHighlighting();
  if(currentNodeIndex>=parsedNodes.length){
   if(sentenceMissed) missedSentencesForNextRun.push(playSentences[currentSentenceIndex]);
-  gameTimer=setTimeout(()=>{ if(!isPlaying) return; currentSentenceIndex++; loadSentence(); },200);
+  if(questMode) battleAttack();
+  gameTimer=setTimeout(()=>{ if(!isPlaying) return; currentSentenceIndex++; loadSentence(); },questMode?550:200);
  }
 }
 function updateHighlighting(){
@@ -530,7 +926,7 @@ function updateHighlighting(){
   });
  }
 }
-function advance(){ currentNodeIndex++; currentTypingState=""; skipNonTypableNodes(); }
+function advance(){ if(questMode){ questDone++; sentDone++; updateBattle(); } currentNodeIndex++; currentTypingState=""; skipNonTypableNodes(); }
 function canAcceptEarly(node){
  if(node.kana!=='ん') return true;
  let j=currentNodeIndex+1; while(j<parsedNodes.length&&parsedNodes[j].type==='skip') j++;
@@ -551,9 +947,10 @@ function handleKey(key){
  currentInputHadMiss=true; showHint=true; missCount++; sentenceMissed=true; playErrorSound(); flashError();
  const exp=node.romajiPatterns.filter(p=>p.startsWith(currentTypingState)).map(p=>p[currentTypingState.length]).filter(Boolean);
  const k=exp.length?exp[0]:'-'; missedKeyCounts[k]=(missedKeyCounts[k]||0)+1; updateHighlighting();
+ if(questMode) battleMiss();
 }
 window.addEventListener('keydown',e=>{
- if(!isPlaying||e.metaKey||e.ctrlKey||e.altKey) return;
+ if(!isPlaying||locked||e.metaKey||e.ctrlKey||e.altKey) return;
  if(e.key==='Process'||e.isComposing){ $('ime-warning').classList.remove('hidden'); return; }
  $('ime-warning').classList.add('hidden');
  if(e.key.length!==1) return;
@@ -562,7 +959,7 @@ window.addEventListener('keydown',e=>{
 
 // ---------- 結果 ----------
 function finishGame(){
- if(!isPlaying) return; isPlaying=false; clearTimeout(gameTimer); switchScreen('result-screen');
+ if(!isPlaying) return; isPlaying=false; clearTimeout(gameTimer); switchScreen('result-screen'); $('res-title').textContent=questMode?'⚔️ クエストクリア！ 成績表':'タイピング成績表';
  const t=(Date.now()-startTime)/1000, kpm=t>0?totalTypedCount/t*60:0;
  const acc=totalTypedCount===0?0:totalTypedCount/(totalTypedCount+missCount), sc=Math.round(kpm*Math.pow(acc,3));
  const lvl=sc>=400?"Godhand (神)":sc>=350?"Jedi (達人)":sc>=300?"Thunder (雷)":sc>=260?"Comet (彗星)":sc>=226?"S":sc>=192?"A":sc>=141?"B":sc>=90?"C":sc>=39?"D":"E";
@@ -572,6 +969,8 @@ function finishGame(){
  $('res-accuracy').textContent=(acc*100).toFixed(1)+'%';
  $('res-weak-keys').textContent=Object.entries(missedKeyCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(k=>k[0]).join(' ')||'-';
  $('res-comment').textContent=acc>=.95&&kpm>=150?"完璧だ！鬼に金棒だね！":acc>=.9?"素晴らしい！「石の上にも三年」だね！":acc>=.8?"よく頑張ったね！「千里の道も一歩から」！":"あきらめないで！間違えた所を復習しよう。";
+ showDrop(acc); if(newsRun) showStamp(addStamp());
+ showPets(checkPets());
  const rb=$('result-sentences'); rb.innerHTML='';
  playSentences.forEach(s=>{
   if(!s.log.length) return;
@@ -586,7 +985,7 @@ function finishGame(){
 $('close-game-btn').addEventListener('click',()=>{ isPlaying=false; clearTimeout(gameTimer); switchScreen('main-menu'); });
 $('btn-close-result').addEventListener('click',()=>switchScreen('main-menu'));
 $('btn-retry').addEventListener('click',()=>startGame(extractPreset([...globalSentences],lastGameSettings.length,lastGameSettings.isRandom)));
-$('btn-miss-only').addEventListener('click',()=>{ if(missedSentencesForNextRun.length) startGame(missedSentencesForNextRun); });
+$('btn-miss-only').addEventListener('click',()=>{ if(missedSentencesForNextRun.length) startGame(missedSentencesForNextRun,true); });
 </script>
 </body>
 </html>
