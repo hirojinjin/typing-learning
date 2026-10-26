@@ -103,7 +103,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾b</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾c</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -692,6 +692,27 @@ function playErrorSound(){
 }
 function flashError(){ const g=$('game-screen'); g.classList.remove('flash-error'); void g.offsetWidth; g.classList.add('flash-error'); }
 
+// ---------- 読みの補正（日付・年・人数・よく間違える言葉）----------
+// 自動変換が間違えやすい読みを、先にひらがなにしてから変換にかけます。
+// 足したい言葉は READING_WORDS に ['漢字','よみ'] を1行ずつ足せば直ります（長い言葉を先に書く）。
+const READING_WORDS=[['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな']];
+const DAY_READ={1:'ついたち',2:'ふつか',3:'みっか',4:'よっか',5:'いつか',6:'むいか',7:'なのか',8:'ようか',9:'ここのか',10:'とおか',14:'じゅうよっか',17:'じゅうしちにち',19:'じゅうくにち',20:'はつか',24:'にじゅうよっか',27:'にじゅうしちにち',29:'にじゅうくにち'};
+const KN={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+function kanjiNum(t){ const m=t.match(/^(?:([二三])?十([一二三四五六七八九])?|([一二三四五六七八九]))$/); if(!m) return 0; if(m[3]) return KN[m[3]]; return (m[1]?KN[m[1]]:1)*10+(m[2]?KN[m[2]]:0); }
+function numKana(v){
+ const D=['','いち','に','さん','よん','ご','ろく','なな','はち','きゅう'], T=['','せん','にせん','さんぜん','よんせん','ごせん','ろくせん','ななせん','はっせん','きゅうせん'],
+  H=['','ひゃく','にひゃく','さんびゃく','よんひゃく','ごひゃく','ろっぴゃく','ななひゃく','はっぴゃく','きゅうひゃく'], J=['','じゅう','にじゅう','さんじゅう','よんじゅう','ごじゅう','ろくじゅう','ななじゅう','はちじゅう','きゅうじゅう'];
+ const o=v%10, one={4:'よ',7:'なな',9:'く'}[o]||D[o];   // 〜よねん・〜くねん
+ return T[Math.floor(v/1000)]+H[Math.floor(v/100)%10]+J[Math.floor(v/10)%10]+one;
+}
+function fixReadings(t){
+ READING_WORDS.forEach(([k,r])=>{ t=t.split(k).join(r); });
+ t=t.replace(/([〇一二三四五六七八九]{4})年(度|間)?/g,(a,y,sf)=>numKana(parseInt([...y].map(c=>c==='〇'?0:KN[c]).join(''),10))+'ねん'+(sf==='度'?'ど':sf==='間'?'かん':''));
+ t=t.replace(/(月)?((?:[二三])?十[一二三四五六七八九]?|[一二三四五六七八九])日(間|目)?/g,(a,mo,num,sf)=>{ const n=kanjiNum(num); if(!n||(n===1&&!mo)||!DAY_READ[n]) return a; return (mo||'')+DAY_READ[n]+(sf==='間'?'かん':sf==='目'?'め':''); });
+ t=t.replace(/(^|[^一二三四五六七八九十百千])([一二])人/g,(a,p,c)=>p+(c==='一'?'ひとり':'ふたり'));
+ return t;
+}
+
 // ---------- パーサ ----------
 function getNextKanaBlock(s,idx){
  if(idx>=s.length) return null;
@@ -726,7 +747,7 @@ async function prepareAndStartCustomGame(lines,btn){
   if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
   globalSentences=[]; const bad=new Set();
   for(const l of lines){
-   const k=await kuroshiro.convert(l,{to:"hiragana"}), n=parseKanaSentence(k);
+   const k=await kuroshiro.convert(fixReadings(l),{to:"hiragana"}), n=parseKanaSentence(k);
    n.forEach(x=>{ if(x.unsupported) bad.add(x.kana); });
    if(n.some(x=>x.type==='char')) globalSentences.push({kanji:l,kana:k,nodes:n});
   }
@@ -744,7 +765,7 @@ async function prepareAndStartPresetGame(objs,len,rnd){
    let kana=o.kana;
    if(!kana){
     if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
-    kana=await kuroshiro.convert(o.kanji,{to:"hiragana"});
+    kana=await kuroshiro.convert(fixReadings(o.kanji),{to:"hiragana"});
    }
    const n=parseKanaSentence(kana); if(n.some(x=>x.type==='char')) globalSentences.push({kanji:o.kanji,kana,nodes:n});
   }
@@ -863,7 +884,7 @@ let kanjiSeg=null, nodeOff=[0];
 function toNorm(t){ return t.replace(/[ァ-ヶ]/g,m=>String.fromCharCode(m.charCodeAt(0)-0x60)).replace(/[Ａ-Ｚａ-ｚ０-９]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xFEE0)); }
 function alignSegments(kanji,kana){
  const K=Array.from(kanji), Kn=Array.from(toNorm(kanji)), As=toNorm(kana), A=Array.from(As);
- const isK=c=>/[\u4e00-\u9fff々〆]/.test(c); const segs=[]; let i=0,a=0;
+ const isK=c=>/[\u4e00-\u9fff々〆〇]/.test(c); const segs=[]; let i=0,a=0;
  while(i<K.length){
   if(!isK(K[i])){ if(Kn[i]!==A[a]) return null; segs.push({k0:i,k1:i+1,a0:a,a1:a+1}); i++; a++; continue; }
   let j=i; while(j<K.length&&isK(K[j])) j++;
