@@ -103,7 +103,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾d</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾e</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -212,9 +212,11 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
     </div>
   </div>
   <!-- 本文が主役。読みは「いま打つ1文字分」だけ -->
-  <div class="flex-1 min-h-0 relative bg-white border-b-4 border-slate-200 flex flex-col items-center justify-center px-6 overflow-y-auto">
-    <div id="kanji-display" class="text-center max-w-4xl font-bold" style="font-size:clamp(1.5rem,5vh,3rem);line-height:1.9;letter-spacing:.04em"></div>
-    <div class="mt-8 h-20 flex flex-col items-center justify-center">
+  <div class="flex-1 min-h-0 relative bg-white border-b-4 border-slate-200 flex flex-col px-6">
+    <div id="kanji-scroll" class="flex-1 min-h-0 overflow-y-auto">
+      <div class="min-h-full flex items-center justify-center py-2"><div id="kanji-display" class="text-center max-w-4xl font-bold" style="font-size:clamp(1.5rem,5vh,3rem);line-height:1.9;letter-spacing:.04em"></div></div>
+    </div>
+    <div class="shrink-0 h-20 flex flex-col items-center justify-center">
       <div id="now-kana" class="text-2xl font-bold text-orange-600 h-9"></div>
       <div id="now-romaji" class="font-mono text-lg font-bold tracking-widest h-7"></div>
     </div>
@@ -941,6 +943,7 @@ function loadSentence(){
  if(currentSentenceIndex>=playSentences.length){ if(questMode){ enemyKO(); gameTimer=setTimeout(finishGame,1300); } else finishGame(); return; }
  const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false; sentDone=0;
  const kd=$('kanji-display'); kd.innerHTML='';
+ const nCh=Array.from(s.kanji).length; kd.style.fontSize=nCh>160?'clamp(1rem,2.6vh,1.5rem)':nCh>80?'clamp(1.2rem,3.6vh,2.1rem)':'clamp(1.5rem,5vh,3rem)'; $('kanji-scroll').scrollTop=0;
  const chars=Array.from(s.kanji);
  chars.forEach(ch=>{ const sp=document.createElement('span'); sp.textContent=ch; kd.appendChild(sp); });
  kanjiMap=buildKanjiMap(chars,parsedNodes);
@@ -960,6 +963,9 @@ function updateHighlighting(){
  const kc=$('kanji-display').children, L=kc.length, fin=currentNodeIndex>=parsedNodes.length;
  const [lo,hi]=kanjiRange(L,fin);
  for(let i=0;i<L;i++) kc[i].className=i<lo?'text-slate-400':i<hi?'text-orange-600 underline decoration-4 underline-offset-8 decoration-orange-400':'text-slate-800';
+ const sc=$('kanji-scroll');
+ if(sc&&lo<L&&kc[lo]){ const sr=sc.getBoundingClientRect(), er=kc[lo].getBoundingClientRect(), pad=er.height*1.6;
+  if(er.bottom>sr.bottom-pad) sc.scrollTop+=er.bottom-sr.bottom+pad; else if(er.top<sr.top+er.height*0.3) sc.scrollTop-=sr.top+er.height*0.3-er.top; }
  const nk=$('now-kana'), nr=$('now-romaji'); nk.textContent=''; nr.textContent='';
  if(!fin&&(hintLevel===0||showHint)){
   const n=parsedNodes[currentNodeIndex], vp=n.romajiPatterns.filter(p=>p.startsWith(currentTypingState)), d=vp.length?vp[0]:n.display;
