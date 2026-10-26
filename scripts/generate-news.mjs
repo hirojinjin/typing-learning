@@ -20,7 +20,7 @@ async function call(extra = {}) {
     method: 'POST',
     headers: { 'x-api-key': KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-haiku-5-5', max_tokens: 8000,
+      model: 'claude-sonnet-5-5', max_tokens: 8000,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
       messages, ...extra,
     }),
