@@ -103,7 +103,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾c</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾d</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -713,6 +713,43 @@ function fixReadings(t){
  return t;
 }
 
+// ---------- 読み仮名づくり（漢字がなければ即時／あれば別スレッドで辞書を読む）----------
+const HAS_KANJI=/[\u4e00-\u9fff々〆〇]/;
+let kanaWorker=null, kanaWorkerReady=null;
+function startKanaWorker(){
+ if(kanaWorkerReady) return kanaWorkerReady;
+ kanaWorkerReady=new Promise((resolve,reject)=>{
+  try{
+   const src="importScripts('https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js');var tok=null;"+
+    "kuromoji.builder({dicPath:'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'}).build(function(e,t){if(e){postMessage({t:'err',m:String(e)});return;}tok=t;postMessage({t:'ready'});});"+
+    "onmessage=function(ev){var out=ev.data.lines.map(function(l){return tok.tokenize(l).map(function(x){return (x.reading&&x.reading!=='*')?x.reading:x.surface_form;}).join('');});postMessage({t:'done',id:ev.data.id,out:out});};";
+   const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+   const to=setTimeout(()=>reject(new Error('timeout')),120000);
+   w.onmessage=e=>{ if(e.data.t==='ready'){ clearTimeout(to); kanaWorker=w; resolve(w); } else if(e.data.t==='err'){ clearTimeout(to); reject(new Error(e.data.m)); } };
+   w.onerror=e=>{ clearTimeout(to); reject(new Error(e.message||'worker')); };
+  }catch(err){ reject(err); }
+ });
+ return kanaWorkerReady;
+}
+function workerConvert(lines){
+ return new Promise(res=>{ const id=Math.random(); const h=e=>{ if(e.data.t==='done'&&e.data.id===id){ kanaWorker.removeEventListener('message',h); res(e.data.out); } };
+  kanaWorker.addEventListener('message',h); kanaWorker.postMessage({id,lines}); });
+}
+async function toKana(lines){
+ const src=lines.map(fixReadings), res=src.map(l=>HAS_KANJI.test(l)?null:l), need=[];
+ res.forEach((r,i)=>{ if(r===null) need.push(i); });
+ if(need.length){
+  let out;
+  try{ await startKanaWorker(); out=await workerConvert(need.map(i=>src[i])); }
+  catch(e){                                                   // 予備：従来の方法（初回だけ固まることがあります）
+   if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
+   out=[]; for(const i of need) out.push(await kuroshiro.convert(src[i],{to:'hiragana'}));
+  }
+  need.forEach((i,k)=>{ res[i]=out[k]; });
+ }
+ return res.map(toNorm);
+}
+
 // ---------- パーサ ----------
 function getNextKanaBlock(s,idx){
  if(idx>=s.length) return null;
@@ -744,10 +781,11 @@ function parseKanaSentence(kanaStr){
 async function prepareAndStartCustomGame(lines,btn){
  gameCtx=null; questMode=false; newsRun=false; initAudio(); const ot=btn.textContent; btn.disabled=true; btn.textContent='読み込み中...';
  try{
-  if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
+  if(lines.some(l=>HAS_KANJI.test(l))) btn.textContent='辞書を準備しています…（初回だけ少し時間がかかります）';
+  const kanas=await toKana(lines);
   globalSentences=[]; const bad=new Set();
-  for(const l of lines){
-   const k=await kuroshiro.convert(fixReadings(l),{to:"hiragana"}), n=parseKanaSentence(k);
+  for(const [li,l] of lines.entries()){
+   const k=kanas[li], n=parseKanaSentence(k);
    n.forEach(x=>{ if(x.unsupported) bad.add(x.kana); });
    if(n.some(x=>x.type==='char')) globalSentences.push({kanji:l,kana:k,nodes:n});
   }
@@ -763,10 +801,7 @@ async function prepareAndStartPresetGame(objs,len,rnd){
  try{
   for(const o of objs){
    let kana=o.kana;
-   if(!kana){
-    if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
-    kana=await kuroshiro.convert(fixReadings(o.kanji),{to:"hiragana"});
-   }
+   if(!kana){ kana=(await toKana([o.kanji]))[0]; o.kana=kana; }
    const n=parseKanaSentence(kana); if(n.some(x=>x.type==='char')) globalSentences.push({kanji:o.kanji,kana,nodes:n});
   }
  }catch(e){ alert('読み仮名の準備に失敗しました。ネットワーク接続を確認してください。'); return; }
