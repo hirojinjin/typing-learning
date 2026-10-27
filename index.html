@@ -104,7 +104,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第4弾a</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第4弾b</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -716,7 +716,7 @@ function flashError(){ const g=$('game-screen'); g.classList.remove('flash-error
 // ---------- 読みの補正（日付・年・人数・よく間違える言葉）----------
 // 自動変換が間違えやすい読みを、先にひらがなにしてから変換にかけます。
 // 足したい言葉は READING_WORDS に ['漢字','よみ'] を1行ずつ足せば直ります（長い言葉を先に書く）。
-const READING_WORDS=[['七転び八起き','ななころびやおき'],['七転八倒','しちてんばっとう'],['急がば回れ','いそがばまわれ'],['身から出たさび','みからでたさび'],['一期一会','いちごいちえ'],['温故知新','おんこちしん'],['晴耕雨読','せいこううどく'],['自画自賛','じがじさん'],['勇猛果敢','ゆうもうかかん'],['異口同音','いくどうおん'],['四字熟語','よじじゅくご'],['祇園精舎','ぎおんしょうじゃ'],['清少納言','せいしょうなごん'],['梅雨','つゆ'],['扇状地','せんじょうち'],['三角州','さんかくす'],['代かき','しろかき'],['田おこし','たおこし'],['稲刈り','いねかり'],['子葉','しよう'],['高潮','たかしお'],['稚魚','ちぎょ'],['沖合','おきあい'],['羊水','ようすい'],['胎盤','たいばん'],['農協','のうきょう'],['読み仮名','よみがな'],['振り仮名','ふりがな'],['平仮名','ひらがな'],['片仮名','かたかな'],['仮名遣い','かなづかい'],['仮名','かな'],['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな'],['上手','じょうず'],['下手','へた'],['大丈夫','だいじょうぶ'],['果物','くだもの'],['眼鏡','めがね'],['部屋','へや'],['一昨日','おととい'],['明後日','あさって'],['今夜','こんや'],['大勢','おおぜい']];
+const READING_WORDS=[['直接話','ちょくせつはなし'],['七転び八起き','ななころびやおき'],['七転八倒','しちてんばっとう'],['急がば回れ','いそがばまわれ'],['身から出たさび','みからでたさび'],['一期一会','いちごいちえ'],['温故知新','おんこちしん'],['晴耕雨読','せいこううどく'],['自画自賛','じがじさん'],['勇猛果敢','ゆうもうかかん'],['異口同音','いくどうおん'],['四字熟語','よじじゅくご'],['祇園精舎','ぎおんしょうじゃ'],['清少納言','せいしょうなごん'],['梅雨','つゆ'],['扇状地','せんじょうち'],['三角州','さんかくす'],['代かき','しろかき'],['田おこし','たおこし'],['稲刈り','いねかり'],['子葉','しよう'],['高潮','たかしお'],['稚魚','ちぎょ'],['沖合','おきあい'],['羊水','ようすい'],['胎盤','たいばん'],['農協','のうきょう'],['読み仮名','よみがな'],['振り仮名','ふりがな'],['平仮名','ひらがな'],['片仮名','かたかな'],['仮名遣い','かなづかい'],['仮名','かな'],['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな'],['上手','じょうず'],['下手','へた'],['大丈夫','だいじょうぶ'],['果物','くだもの'],['眼鏡','めがね'],['部屋','へや'],['一昨日','おととい'],['明後日','あさって'],['今夜','こんや'],['大勢','おおぜい']];
 const DAY_READ={1:'ついたち',2:'ふつか',3:'みっか',4:'よっか',5:'いつか',6:'むいか',7:'なのか',8:'ようか',9:'ここのか',10:'とおか',14:'じゅうよっか',17:'じゅうしちにち',19:'じゅうくにち',20:'はつか',24:'にじゅうよっか',27:'にじゅうしちにち',29:'にじゅうくにち'};
 const KN={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
 function kanjiNum(t){ const m=t.match(/^(?:([二三])?十([一二三四五六七八九])?|([一二三四五六七八九]))$/); if(!m) return 0; if(m[3]) return KN[m[3]]; return (m[1]?KN[m[1]]:1)*10+(m[2]?KN[m[2]]:0); }
@@ -727,6 +727,7 @@ function numKana(v){
  return T[Math.floor(v/1000)]+H[Math.floor(v/100)%10]+J[Math.floor(v/10)%10]+one;
 }
 function fixReadings(t){
+ t=t.replace(/(^|[^\u4e00-\u9fff])土(を|が|は|に|で|の|も|と|や|、|。)/g,'$1つち$2');   // 単独の「土」は つち
  t=t.replace(/([ぁ-んァ-ヶー〇一二三四五六七八九十])行(は|が|を|に|の|で|と|も|や|ごと|目|間|、|。|$)/g,'$1ぎょう$2');   // 「行」は文章の“行（ぎょう）”のとき
  READING_WORDS.forEach(([k,r])=>{ t=t.split(k).join(r); });
  t=t.replace(/([〇一二三四五六七八九]{4})年(度|間)?/g,(a,y,sf)=>numKana(parseInt([...y].map(c=>c==='〇'?0:KN[c]).join(''),10))+'ねん'+(sf==='度'?'ど':sf==='間'?'かん':''));
@@ -757,7 +758,7 @@ function workerConvert(lines){
  return new Promise(res=>{ const id=Math.random(); const h=e=>{ if(e.data.t==='done'&&e.data.id===id){ kanaWorker.removeEventListener('message',h); res(e.data.out); } };
   kanaWorker.addEventListener('message',h); kanaWorker.postMessage({id,lines}); });
 }
-const KANA_VER='2026-10-27a';   // 読みの補正表を直したら、この文字を変えると保存した読みが作り直されます
+const KANA_VER='2026-10-28b';   // 読みの補正表を直したら、この文字を変えると保存した読みが作り直されます
 let KCACHE={}; try{ const j=JSON.parse(localStorage.getItem('typingKanaCache')||'null'); if(j&&j.v===KANA_VER) KCACHE=j.m||{}; }catch(e){}
 function kcSave(){ try{ localStorage.setItem('typingKanaCache',JSON.stringify({v:KANA_VER,m:KCACHE})); }catch(e){} }
 function showBusy(m){ $('busy').textContent=m; $('busy').classList.remove('hidden'); }
@@ -953,18 +954,29 @@ function kanjiPos(L){
 let kanjiSeg=null, nodeOff=[0];
 function toNorm(t){ return t.replace(/[ァ-ヶ]/g,m=>String.fromCharCode(m.charCodeAt(0)-0x60)).replace(/[Ａ-Ｚａ-ｚ０-９]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xFEE0)); }
 function alignSegments(kanji,kana){
- const K=Array.from(kanji), Kn=Array.from(toNorm(kanji)), As=toNorm(kana), A=Array.from(As);
- const isK=c=>/[\u4e00-\u9fff々〆〇]/.test(c); const segs=[]; let i=0,a=0;
+ // 漢字のかたまりと読みを、ひらがな部分を目印に対応づける。読みの長さが「1文字あたり2かな」に近い分け方を選ぶ
+ const K=Array.from(kanji), Kn=Array.from(toNorm(kanji)), A=Array.from(toNorm(kana)), INF=1e9;
+ const isK=c=>/[\u4e00-\u9fff々〆〇]/.test(c), memo=new Map(), pick=new Map();
+ function best(i,a){
+  if(i>=K.length) return a===A.length?0:INF;
+  const key=i*100000+a; if(memo.has(key)) return memo.get(key);
+  let r=INF;
+  if(!isK(K[i])){ if(Kn[i]===A[a]){ const c=best(i+1,a+1); if(c<INF){ r=c; pick.set(key,a+1); } } }
+  else{
+   let j=i; while(j<K.length&&isK(K[j])) j++;
+   const n=j-i;
+   for(let len=n;len<=6*n&&a+len<=A.length;len++){ const c=best(j,a+len); if(c<INF){ const t=c+Math.abs(len-2*n); if(t<r){ r=t; pick.set(key,a+len); } } }
+  }
+  memo.set(key,r); return r;
+ }
+ if(best(0,0)>=INF) return null;
+ const segs=[]; let i=0,a=0;
  while(i<K.length){
-  if(!isK(K[i])){ if(Kn[i]!==A[a]) return null; segs.push({k0:i,k1:i+1,a0:a,a1:a+1}); i++; a++; continue; }
-  let j=i; while(j<K.length&&isK(K[j])) j++;
-  let a1;
-  if(j>=K.length) a1=A.length;
-  else { let e=j; while(e<K.length&&!isK(K[e])) e++; a1=As.indexOf(Kn.slice(j,e).join(''),a+1); if(a1<0) return null; }
-  if(a1<=a) return null;
+  const a1=pick.get(i*100000+a); let j=i+1;
+  if(isK(K[i])){ j=i; while(j<K.length&&isK(K[j])) j++; }
   segs.push({k0:i,k1:j,a0:a,a1}); i=j; a=a1;
  }
- return a===A.length?segs:null;
+ return segs;
 }
 function kanjiRange(L,fin){
  if(fin) return [L,L];
