@@ -61,6 +61,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
 @keyframes mpulse{50%{transform:scale(1.03);box-shadow:0 0 0 8px rgba(251,146,60,.25)}}
 .pet{animation:petbob 1.3s ease-in-out infinite}
 @keyframes petbob{50%{transform:translateY(-3px)}}
+.bt-guard{filter:drop-shadow(0 0 5px #38bdf8) drop-shadow(0 0 10px #38bdf8)}
 </style>
 </head>
 <body class="w-full flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden relative">
@@ -79,7 +80,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
 <div id="main-menu" class="bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-full overflow-y-auto border-t-8 border-blue-600">
   <div class="w-full flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-slate-200 gap-4">
     <h1 class="text-3xl font-black text-slate-800">学習タイピングポータル</h1>
-    <button onclick="initNewsMode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg">📰 今日のキーワード</button>
+    
   </div>
   <div id="mission-card" class="w-full mb-5"></div>
   <div class="w-full flex items-center gap-5 bg-gradient-to-r from-sky-50 to-indigo-50 border-2 border-indigo-100 rounded-2xl p-4 mb-6">
@@ -103,14 +104,14 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第3弾f</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第4弾</div>
 </div>
 
 <!-- Keyword Screen -->
 <div id="news-intro-screen" class="hidden bg-slate-50 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col h-full max-h-full border-t-8 border-indigo-500 relative">
   <button onclick="switchScreen('main-menu')" class="absolute top-4 right-4 text-slate-500 font-bold bg-white px-3 py-1 border rounded shadow-sm">✖ 戻る</button>
   <div class="shrink-0 mb-6 text-center pt-4">
-    <h1 class="text-3xl font-black text-indigo-900 mb-2">今日のキーワード 🌍</h1>
+    <h1 class="text-3xl font-black text-indigo-900 mb-2">今日のニュース 🌍</h1>
     <p class="text-slate-600 font-medium">世界の「今」を知る言葉をタイピングして学ぼう！</p>
   </div>
   <div class="flex-1 min-h-0 overflow-y-auto bg-white p-6 rounded-xl border-2 border-indigo-100 mb-6"><div id="news-preview" class="font-medium leading-loose text-slate-800 text-lg"></div></div>
@@ -138,7 +139,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
     <div id="pat-a-content" class="hidden w-full max-w-md flex flex-col my-auto bg-slate-50 p-8 rounded-2xl border border-slate-100">
       <h2 id="pat-a-title" class="text-2xl font-black text-slate-800 mb-6 text-center"></h2>
       <label class="block text-sm font-bold text-slate-600 mb-2">出題する長さ</label>
-      <select id="pat-a-length" class="w-full mb-6 p-3 border-2 border-slate-200 rounded-xl"><option value="60">ショート (約60文字)</option><option value="150" selected>スタンダード (約150文字)</option><option value="ALL">全文マスター</option></select>
+      <select id="pat-a-length" class="w-full mb-6 p-3 border-2 border-slate-200 rounded-xl"><option value="100">ショート (約100文字)</option><option value="200" selected>スタンダード (約200文字)</option><option value="ALL">全文マスター (約450文字)</option></select>
       <label class="flex items-center text-sm font-bold text-slate-700 cursor-pointer bg-white p-4 rounded-xl border mb-8"><input type="checkbox" id="pat-a-random" class="mr-3 w-5 h-5 accent-blue-600">文章をランダムにシャッフルする</label>
       <button id="pat-a-start-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg">タイピング開始！</button>
     </div>
@@ -164,12 +165,13 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
     <h2 id="pat-b-modal-title" class="text-2xl font-black text-slate-800 mb-3 text-center border-b-2 pb-3"></h2>
     <div id="pat-b-enemy" class="flex flex-col items-center mb-4"></div>
     <label class="block text-sm font-bold text-slate-500 mb-2">クエストの長さ</label>
-    <select id="pat-b-length" class="w-full p-3 border-2 border-slate-200 rounded-xl mb-4"><option value="60">ショート (約60文字)</option><option value="150" selected>スタンダード (約150文字)</option><option value="ALL">ボス戦 (全文)</option></select>
+    <select id="pat-b-length" class="w-full p-3 border-2 border-slate-200 rounded-xl mb-4"><option value="100">ショート (約100文字)</option><option value="200" selected>スタンダード (約200文字)</option><option value="ALL">ボス戦 (全文・約450文字)</option></select>
     <label class="flex items-center text-sm font-bold text-slate-700 mb-8 bg-slate-50 p-4 rounded-xl border cursor-pointer"><input type="checkbox" id="pat-b-random" class="mr-3 w-5 h-5 accent-yellow-500">ランダムエンカウント</label>
     <button id="pat-b-start-btn" class="w-full text-white font-black py-4 rounded-xl shadow-lg text-xl">いざ、出発！</button>
   </div>
 </div>
 
+<div id="busy" class="hidden fixed inset-0 bg-slate-900 bg-opacity-70 z-50 flex items-center justify-center text-white font-black text-lg sm:text-xl p-6 text-center"></div>
 <div id="inv-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-40 flex items-center justify-center p-4">
   <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-3xl w-full max-h-full overflow-y-auto relative">
     <button onclick="closeInventory()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">✖</button>
@@ -311,6 +313,9 @@ const textbookData = {
 const ADDED_UNITS={"kokugo": [{"title": "漢字の成り立ち", "sentences": [{"kanji": "漢字には、物の形をかたどった象形文字や、印で意味を表した指事文字などがあります。", "kana": "かんじには、もののかたちをかたどったしょうけいもじや、しるしでいみをあらわしたしじもじなどがあります。"}, {"kanji": "「木」と「木」を合わせて「林」となるように、意味を組み合わせた漢字を会意文字といいます。", "kana": "「き」と「き」をあわせて「はやし」となるように、いみをくみあわせたかんじをかいいもじといいます。"}, {"kanji": "意味を表す部分と音を表す部分を合わせた漢字を、形声文字といいます。", "kana": "いみをあらわすぶぶんとおとをあらわすぶぶんをあわせたかんじを、けいせいもじといいます。"}, {"kanji": "漢字には、中国から伝わった音を表す音読みと、日本の言葉を当てた訓読みがあります。", "kana": "かんじには、ちゅうごくからつたわったおとをあらわすおんよみと、にほんのことばをあてたくんよみがあります。"}]}, {"title": "古文に親しむ", "sentences": [{"kanji": "古文とは、昔の日本で書かれた文章のことで、今の言葉とは言い方がちがう部分があります。", "kana": "こぶんとは、むかしのにほんでかかれたぶんしょうのことで、いまのことばとはいいかたがちがうぶぶんがあります。"}, {"kanji": "「平家物語」は、平氏が栄え、やがて滅びていくようすを語った軍記物語です。", "kana": "「へいけものがたり」は、へいしがさかえ、やがてほろびていくようすをかたったぐんきものがたりです。"}, {"kanji": "「枕草子」は、清少納言が自然や人々のようすを書いた随筆です。", "kana": "「まくらのそうし」は、せいしょうなごんがしぜんやひとびとのようすをかいたずいひつです。"}]}, {"title": "四字熟語", "sentences": [{"kanji": "四字熟語は、四つの漢字が組み合わさって、特別な意味を表す言葉です。", "kana": "よじじゅくごは、よっつのかんじがくみあわさって、とくべつないみをあらわすことばです。"}, {"kanji": "「一石二鳥」は、一つのことで二つの得をするという意味です。", "kana": "「いっせきにちょう」は、ひとつのことでふたつのとくをするといういみです。"}, {"kanji": "「以心伝心」は、言葉にしなくても気持ちが相手に伝わることです。", "kana": "「いしんでんしん」は、ことばにしなくてもきもちがあいてにつたわることです。"}, {"kanji": "「十人十色」は、人によって考え方や好みがちがうという意味です。", "kana": "「じゅうにんといろ」は、ひとによってかんがえかたやこのみがちがうといういみです。"}]}], "rika": [{"title": "動物のたんじょう", "sentences": [{"kanji": "メダカの雌が産んだ卵に、雄が出した精子が結びつくことを受精といいます。", "kana": "めだかのめすがうんだたまごに、おすがだしたせいしがむすびつくことをじゅせいといいます。"}, {"kanji": "受精した卵は、日がたつにつれて、中で体のつくりが少しずつできていきます。", "kana": "じゅせいしたたまごは、ひがたつにつれて、なかでからだのつくりがすこしずつできていきます。"}, {"kanji": "卵の中の養分を使って育ち、約十一日たつと子メダカがふ化します。", "kana": "たまごのなかのようぶんをつかってそだち、やくじゅういちにちたつとこめだかがふかします。"}, {"kanji": "人は、母親の体内で約三十八週間育ってから生まれます。", "kana": "ひとは、ははおやのたいないでやくさんじゅうはっしゅうかんそだってからうまれます。"}]}, {"title": "流れる水のはたらき", "sentences": [{"kanji": "流れる水には、地面をけずる侵食、土を運ぶ運搬、積もらせる堆積のはたらきがあります。", "kana": "ながれるみずには、じめんをけずるしんしょく、つちをはこぶうんぱん、つもらせるたいせきのはたらきがあります。"}, {"kanji": "川の上流では、流れが速く、谷が深くけずられてV字谷ができます。", "kana": "かわのじょうりゅうでは、ながれがはやく、たにがふかくけずられてVじだにができます。"}, {"kanji": "川の下流では、運ばれてきた土が積もり、広い平野や三角州ができます。", "kana": "かわのかりゅうでは、はこばれてきたつちがつもり、ひろいへいややさんかくすができます。"}, {"kanji": "大雨で川の水が増えると、水の力が強くなり、洪水が起こることがあります。", "kana": "おおあめでかわのみずがふえると、みずのちからがつよくなり、こうずいがおこることがあります。"}]}, {"title": "ものの溶け方", "sentences": [{"kanji": "物が水に溶けて、すき通った液になることを、溶けるといいます。", "kana": "ものがみずにとけて、すきとおったえきになることを、とけるといいます。"}, {"kanji": "物が水に溶ける量には限りがあり、水の温度によって変わります。", "kana": "ものがみずにとけるりょうにはかぎりがあり、みずのおんどによってかわります。"}, {"kanji": "食塩は水の温度が変わっても溶ける量があまり変わりませんが、ミョウバンは温度が高いほどたくさん溶けます。", "kana": "しょくえんはみずのおんどがかわってもとけるりょうがあまりかわりませんが、みょうばんはおんどがたかいほどたくさんとけます。"}, {"kanji": "溶け残りを取り除くには、ろ紙を使ってろ過をします。", "kana": "とけのこりをとりのぞくには、ろしをつかってろかをします。"}]}], "shakai": [{"title": "水産業のさかんな地域", "sentences": [{"kanji": "日本の近海には、暖流と寒流がぶつかる潮目があり、魚がたくさん集まります。", "kana": "にほんのきんかいには、だんりゅうとかんりゅうがぶつかるしおめがあり、さかながたくさんあつまります。"}, {"kanji": "魚をとる漁業には、沖合漁業や遠洋漁業のほかに、魚や貝を育てる養殖業もあります。", "kana": "さかなをとるぎょぎょうには、おきあいぎょぎょうやえんようぎょぎょうのほかに、さかなやかいをそだてるようしょくぎょうもあります。"}, {"kanji": "魚のとりすぎなどで資源が減ることが、日本の漁業の課題になっています。", "kana": "さかなのとりすぎなどでしげんがへることが、にほんのぎょぎょうのかだいになっています。"}]}, {"title": "情報を伝える人々", "sentences": [{"kanji": "テレビや新聞、インターネットなどを通して、たくさんの人に情報を伝えるしくみをマスメディアといいます。", "kana": "てれびやしんぶん、いんたーねっとなどをとおして、たくさんのひとにじょうほうをつたえるしくみをますめでぃあといいます。"}, {"kanji": "ニュースをつくる人たちは、正確さと速さを大切にしながら、取材を重ねて情報を伝えています。", "kana": "にゅーすをつくるひとたちは、せいかくさとはやさをたいせつにしながら、しゅざいをかさねてじょうほうをつたえています。"}, {"kanji": "情報を受け取るときは、それが正しいかどうかを自分で考えて判断することが大切です。", "kana": "じょうほうをうけとるときは、それがただしいかどうかをじぶんでかんがえてはんだんすることがたいせつです。"}]}, {"title": "自然災害と防災", "sentences": [{"kanji": "日本は地震や津波、台風、大雨などの自然災害が多い国です。", "kana": "にほんはじしんやつなみ、たいふう、おおあめなどのしぜんさいがいがおおいくにです。"}, {"kanji": "国や都道府県、市町村は、ハザードマップをつくって、地域の危険な場所を知らせています。", "kana": "くにやとどうふけん、しちょうそんは、はざーどまっぷをつくって、ちいきのきけんなばしょをしらせています。"}, {"kanji": "日ごろから避難場所や避難経路を確認し、家族で防災について話し合っておくことが大切です。", "kana": "ひごろからひなんばしょやひなんけいろをかくにんし、かぞくでぼうさいについてはなしあっておくことがたいせつです。"}]}]};
 Object.keys(ADDED_UNITS).forEach(k=>textbookData[k].units.push(...ADDED_UNITS[k]));
 Object.entries(textbookData).forEach(([k,v])=>v.units.forEach(u=>u.subject=k));
+// 各単元を400〜500文字にするための追加文（読み仮名は初回に自動で付けて、この端末に保存します）
+const NEW_TEXT={"敬語の使い方": ["「先生がおっしゃる」の「おっしゃる」は、「言う」を高めた尊敬語です。", "「私が申し上げる」の「申し上げる」は、「言う」をへりくだった謙譲語です。", "「見る」は、尊敬語では「ご覧になる」、謙譲語では「拝見する」と言います。", "「食べる」は、尊敬語では「召し上がる」、謙譲語では「いただく」と言います。", "「行く」は、尊敬語では「いらっしゃる」、謙譲語では「うかがう」と言います。", "「です」や「ます」をつけて、ていねいに話すのが丁寧語です。", "目上の人や初めて会う人と話すときには、敬語を使うと気持ちよく伝わります。", "ただし、敬語を使いすぎると、かえって分かりにくくなることもあります。", "相手や場面に合わせて、ふさわしい言葉づかいを選ぶことが大切です。", "言葉づかいには、その人の気持ちや心配りが表れます。"], "ことわざと慣用句": ["「七転び八起き」は、何度失敗してもあきらめずに立ち上がるという意味です。", "「石の上にも三年」は、がまん強く続ければ、必ず成功するという意味です。", "「急がば回れ」は、急ぐときほど、安全で確実な方法を選べという意味です。", "「身から出たさび」は、自分のした悪い行いのせいで、苦しむことをいいます。", "「顔が広い」は、知り合いが多いという意味の慣用句です。", "「手を焼く」は、あつかいに困るという意味の慣用句です。", "「耳が痛い」は、自分の弱点を言われて、聞くのがつらいという意味です。", "「ねこの手も借りたい」は、とてもいそがしいことを表します。", "言葉の意味をそのまま受け取らず、たとえとして読み取ることが大切です。", "慣用句を上手に使うと、文章が生き生きとして、気持ちが伝わりやすくなります。"], "説得力のある意見文": ["意見文は、「初め」「中」「終わり」の三つの部分に分けて書くと、読みやすくなります。", "初めの部分では、何について書くのかと、自分の考えをはっきり示します。", "中の部分では、考えを支える理由や、具体的な例を挙げます。", "「たとえば」と書くと、例を挙げていることが読む人に伝わります。", "数字や調べた結果を使うと、説明がより確かなものになります。", "反対の意見にもふれて、それに答えると、さらに説得力が増します。", "終わりの部分では、もう一度自分の考えをまとめて、読む人に呼びかけます。", "「思います」ばかりを続けず、言い切る表現も使うと、文章に力が出ます。", "書き終えたら声に出して読み、分かりにくい所や、間違いがないかを確かめましょう。", "友達に読んでもらい、感想を聞くことも、よい文章を書くための助けになります。"], "漢字の成り立ち": ["「日」や「山」のように、物の形をかたどった文字を象形文字といいます。", "「上」や「下」のように、目に見えないことを印で表した文字を指事文字といいます。", "「明」は、「日」と「月」を合わせて、明るいという意味を表した会意文字です。", "「休」は、人が木にもたれる形から、休むという意味になりました。", "「河」や「草」は、意味と音を組み合わせてできた形声文字です。", "漢字の部首を知ると、意味の見当をつけやすくなります。", "「さんずい」がつく漢字は、水に関係する意味を持つことが多いです。", "「にんべん」は人に、「きへん」は木に、それぞれ関係する漢字につきます。", "知らない漢字に出会ったときは、部首や成り立ちから、意味を考えてみましょう。"], "古文に親しむ": ["古文は、昔の言葉づかいで書かれているため、今の言葉とは読み方がちがうことがあります。", "「いと」は「とても」、「をかし」は「趣がある」という意味の古い言葉です。", "「枕草子」の初めには、「春はあけぼの」という有名な一節があります。", "清少納言は、春は夜明けのころが一番すばらしいと書いています。", "「平家物語」の初めには、「祇園精舎の鐘の声」という有名な言葉があります。", "この言葉は、どんなに栄えたものも、いつかは衰えるという考え方を表しています。", "古文を声に出して読むと、言葉のリズムのよさを感じることができます。", "昔の人が見た景色や、感じた思いが、今も同じように伝わってくるのは不思議です。", "古文に親しむことは、日本の文化や歴史を知る第一歩になります。"], "四字熟語": ["「一期一会」は、一生に一度の出会いを大切にするという意味です。", "「温故知新」は、昔のことを学んで、新しい知識や考えを得ることです。", "「晴耕雨読」は、晴れた日は畑を耕し、雨の日は読書をする暮らしのことです。", "「七転八倒」は、苦しくて、転げ回ることをいいます。", "「自画自賛」は、自分で自分のことをほめるという意味です。", "「勇猛果敢」は、勇ましく、思い切って物事を行うことです。", "「異口同音」は、多くの人が同じことを言うという意味です。", "四字熟語は、中国の古い話から生まれたものも多くあります。", "意味を知って使うと、短い言葉で、気持ちや様子をくわしく表せます。", "四字熟語を覚えると、読む力だけでなく、書く力も育ちます。"], "植物の発芽と成長": ["インゲンマメの種子を半分に割ると、中には小さな芽のもとが入っています。", "この芽のもとが、水や空気や温度の条件がそろうと、のびて育っていきます。", "種子には、発芽に必要な養分が、あらかじめたくわえられています。", "インゲンマメの種子では、養分は子葉にたくわえられています。", "種子に水をあたえず、乾いたままにしておくと、発芽しません。", "空気にふれないように水につけたままの種子も、発芽しません。", "発芽した後、子葉の養分を使いきると、芽は光と肥料で育ちます。", "日光に当てると、葉の緑色がこくなり、茎ががっしりと太く育ちます。", "日光を当てずにおくと、茎がひょろひょろとのびて、色もうすくなります。", "植物は、日光を受けて、成長に必要な養分を、自分の葉でつくり出しています。", "調べるときは、条件を一つだけ変え、ほかの条件はそろえて比べることが大切です。"], "台風と天気の変化": ["台風が近づくと、強い風がふき、大雨になることがあります。", "台風は、日本の南の海上で発生し、夏から秋にかけて日本に近づくことが多いです。", "台風は、はじめ西に向かい、やがて北や北東へ向きを変えて進むことが多いです。", "台風の進む道すじは、太平洋高気圧や、上空の風の流れによって変わります。", "台風が通りすぎるときは、大雨のために、川の水があふれたり、がけがくずれたりします。", "海の近くでは、高潮といって、海面が高くなり、陸地に水が入ってくることがあります。", "日本付近の雲は、ふつう西から東へ動くので、西の空の雲の様子は、これからの天気を予想する手がかりになります。", "台風の情報は、テレビやインターネットの天気予報で、こまめに確かめましょう。", "大雨や強風のときは、むやみに外に出ず、安全な場所で過ごすことが大切です。"], "電磁石の性質": ["電磁石をつくるときは、エナメル線を同じ向きに何回も巻きます。", "電流を止めると、電磁石の力はなくなり、鉄を引きつけなくなります。", "電磁石の力の強さは、導線の巻き数や、流れる電流の大きさで変わります。", "巻き数を多くすると、電磁石は強くなり、クリップをたくさん引きつけます。", "かん電池を二個つないで、電流を大きくしても、電磁石は強くなります。", "電磁石の強さを比べるときは、巻き数だけ、または電流だけを変えて調べます。", "電磁石には、スイッチで入り切りができるという、棒磁石にはない便利な点があります。", "電磁石は、ごみ処理場のクレーンや、モーターなど、身の回りで広く使われています。", "電流を流すと、方位磁針の針が動くことからも、電流が磁石の力を生むことが分かります。", "電磁石の強さを調べるときは、同じ大きさのクリップを使って、引きつけた数を数えます。"], "動物のたんじょう": ["メダカのおすは、めすより背びれに切れこみがあり、しりびれが大きいという特徴があります。", "めすが産んだ卵は、水草につくので、卵を観察するときは水草ごととります。", "卵の中では、はじめに体の形ができ、やがて目や心臓ができて、血液が流れ出します。", "子メダカは、はらにある養分を使って育つので、生まれてから二、三日は、えさを食べません。", "人の子どもは、母親の体内の子宮で育ち、胎盤とへそのおを通して養分を受け取ります。", "母親の体内では、羊水という水のような液体が、赤ちゃんを守っています。", "生まれた赤ちゃんは、身長が約五十センチメートル、体重が約三キログラムです。", "生まれた赤ちゃんは、母乳やミルクを飲んで、成長していきます。", "自分が生まれてきたことは、家族の大きな喜びだったことを、思い出してみましょう。"], "流れる水のはたらき": ["川の曲がっている所では、外側は流れが速く、がけのようにけずられます。", "内側は流れがゆるやかで、土や小石がたまって、川原ができます。", "川の上流には大きくて角ばった石が多く、下流にいくほど、小さくて丸い石や砂が多くなります。", "石が丸くなるのは、流れる間に、ぶつかり合ってけずられるからです。", "山から平地に出る所では、土砂が積もって、扇のような形の扇状地ができます。", "川が海に流れこむ所では、土砂が積もって、三角州ができることがあります。", "洪水を防ぐために、ダムをつくったり、堤防を築いたりして、水の量を調節しています。", "大雨のときは、川に近づかず、避難の情報を確かめて行動することが大切です。"], "ものの溶け方": ["水に溶けた物は、見えなくなっても、なくなったわけではありません。", "食塩を水に溶かす前と後で、全体の重さをはかると、重さは変わりません。", "溶けた物は、水の中全体に、同じこさで広がっています。", "水の量をふやすと、溶ける物の量も、ふえます。", "水の温度を上げると、ミョウバンは、たくさん溶けるようになります。", "温度が高い水に溶かしたミョウバン水を冷やすと、溶けきれなくなった分が、つぶとなって出てきます。", "食塩の水溶液を熱して水を蒸発させると、白い食塩のつぶが残ります。", "このように、水に溶けた物を取り出すには、水溶液を冷やしたり、水を蒸発させたりします。", "実験では、水の量や温度などの条件をそろえて、正しく比べることが大切です。"], "日本の国土と気候": ["日本は、北は北海道から南は沖縄まで、細長くのびた島国です。", "国土は、北海道、本州、四国、九州の四つの大きな島と、たくさんの小さな島からなります。", "国土は山地が多く、平地は少ないので、人は、海ぞいの平野に多く住んでいます。", "日本の川は、短くて流れが急なものが多く、大雨が降ると、洪水が起こりやすいです。", "夏は、南東から海をわたってくる季節風のえいきょうで、暑くて雨が多くなります。", "冬は、北西から季節風がふき、日本海側では、雪がたくさん降ります。", "太平洋側では、冬に雪が少なく、からりと晴れた日が多くなります。", "六月ごろには、梅雨といって、雨の日が続く時期があります。", "北海道は冷たい気候で、沖縄県は一年を通して暖かく、気候は地域によって大きくちがいます。", "人々は、気候に合わせて、家のつくりや暮らし方を、くふうしてきました。"], "米づくりのさかんな地域": ["米は、日本人の主食で、全国各地でつくられていますが、中でも東北地方や北陸地方が有名です。", "米づくりは、春に、田おこしと代かきをして、苗を育てるところから始まります。", "田植えは五月ごろに行い、夏の間は、水の管理や草取りをして、イネを育てます。", "秋になると、実ったイネをかりとり、かんそうさせてから脱穀します。", "昔は、農作業を、人の手や牛馬を使って行っていたため、とても手間がかかりました。", "今では、トラクターやコンバインなどの機械を使って、仕事が早く楽になりました。", "農家の人たちは、イネを病気や害虫から守るために、農薬の使い方や、水の入れ方をくふうしています。", "米の品種改良も進み、寒さや病気に強く、おいしい米が開発されています。", "収穫された米は、農協や米屋を通して、スーパーなどに運ばれ、私たちの食卓に届きます。", "最近は、米を食べる量が減ってきて、新しい食べ方や売り方のくふうも進んでいます。"], "日本の自動車工業": ["自動車は、約三万点の部品を組み合わせてつくられます。", "組み立て工場では、車体にエンジンやタイヤなどの部品を、順番に取りつけていきます。", "ベルトコンベアにのせて、部品を次々に取りつけていくと、早く正確につくれます。", "最近は、ロボットが、溶接や塗装など、きけんで正確さが必要な仕事を行っています。", "自動車工場のまわりには、部品をつくる関連工場が数多くあります。", "必要な部品を、必要な時に、必要な量だけ届けるくふうをしています。", "日本でつくられた自動車は、船で世界の国々へ輸出されています。", "外国で現地生産をする会社も増え、現地の人々の仕事を生んでいます。", "環境にやさしい、電気自動車や燃料電池自動車の開発も進められています。", "高齢者や体の不自由な人にも使いやすい、福祉車両も、つくられています。", "自動車は、人や物を運ぶ大切な乗り物として、私たちの暮らしを支えています。"], "水産業のさかんな地域": ["漁業は、とる場所によって、沿岸漁業、沖合漁業、遠洋漁業などに分けられます。", "沿岸漁業は、海岸近くで、小さな船を使って行われ、日帰りで帰ってくるのが特徴です。", "遠洋漁業は、遠くの海まで大きな船で出かけ、何か月も海の上で作業を行います。", "魚は、あみで一度にたくさんとったり、つり針で一ぴきずつとったりと、とり方も色々です。", "漁港につくと、魚は、大きさや種類ごとに分けられて、せりにかけられます。", "新鮮な魚は、氷で冷やされ、トラックなどで、全国のスーパーや店へ運ばれます。", "養殖業では、海や池の中で、魚や貝が大きくなるまで、えさをやって育てます。", "また、卵からかえした稚魚を海に放して、大きく育ててからとる、栽培漁業も行われています。", "水産資源を守るために、とってよい魚の大きさや量を決めるなど、きまりがつくられています。"], "情報を伝える人々": ["新聞は、記者が取材した情報を、編集して、印刷し、毎日家庭に届けています。", "ニュースを早く、正確に伝えるため、記者は事件や出来事の現場に出かけて、直接話を聞きます。", "新聞の記事には、見出しがあり、大切なことを、最初にまとめて書くしくみになっています。", "テレビは、映像と音声で、出来事の様子を、その場にいるように伝えることができます。", "インターネットは、知りたいことを、いつでも調べられる、便利な情報の手段です。", "しかし、インターネットには、まちがった情報や、古い情報がふくまれていることもあります。", "情報を使うときは、出どころがどこか、いつの情報かを、確かめることが大切です。", "また、他人のプライバシーや、作品をかってに使ってはいけません。", "発信する立場になったときも、相手の気持ちを考えて、責任を持つ必要があります。"], "自然災害と防災": ["地震は、地下の岩ばんが急にずれることで起こり、大きな地震では、建物がたおれたり、火事が起こったりします。", "海底で大きな地震が起こると、津波がおし寄せることがあります。", "津波のおそれがあるときは、すぐに、高い場所へにげることが大切です。", "火山が噴火すると、ふん石や火山灰が降り、近くの町に、大きなひ害が出ることがあります。", "災害が起きたとき、国や自治体、消防、警察、自衛隊などが、協力して人々を助けます。", "自分の命は自分で守るという「自助」、地域の人どうしが助け合う「共助」も、とても重要です。", "学校や地域では、避難訓練を行い、いざというときに、落ち着いて行動できるよう備えています。", "家では、非常用の食料や水、懐中電灯などを用意しておくと、いざというとき役立ちます。"]};
+Object.values(textbookData).forEach(v=>v.units.forEach(u=>(NEW_TEXT[u.title]||[]).forEach(k=>u.sentences.push({kanji:k}))));
 
 // ---------- ローマ字表 ----------
 const multiRomajiMap = {
@@ -422,6 +427,7 @@ let newsRun=false;
 function todayKey(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
 function addStamp(){
  if(totalTypedCount<30) return null;
+ markDaily('news');
  const t=todayKey(), mk=t.slice(0,7); SAVE.stamps=SAVE.stamps||{}; SAVE.rewards=SAVE.rewards||{};
  const arr=SAVE.stamps[mk]=SAVE.stamps[mk]||[];
  if(arr.includes(t)) return {already:true,count:arr.length};
@@ -435,16 +441,26 @@ function showStamp(r){
  else if(r.already){ box.className='text-center p-2 border-2 rounded-xl text-sm bg-slate-50 border-slate-200 text-slate-600'; box.textContent='今日のスタンプはもらい済み。また明日！（今月 '+Math.min(r.count,20)+'/20）'; }
  else { box.className='text-center p-3 border-2 rounded-xl font-bold bg-amber-50 border-amber-300 text-slate-800'; box.innerHTML='<div class="text-3xl">🌟</div>今日のスタンプ ゲット！　今月 '+Math.min(r.count,20)+'/20'; }
 }
+function dailyState(){ const t=todayKey(); if(!SAVE.daily||SAVE.daily.date!==t) SAVE.daily={date:t,news:0,short:0,std:0,boss:0}; return SAVE.daily; }
+function markDaily(k){ const d=dailyState(); d[k]=(d[k]||0)+1; persist(); }
 function renderMission(){
- const d=new Date(), t=todayKey(), mk=t.slice(0,7), arr=(SAVE.stamps&&SAVE.stamps[mk])||[], done=arr.includes(t), n=arr.length, month=d.getMonth()+1;
+ const d=new Date(), t=todayKey(), mk=t.slice(0,7), arr=(SAVE.stamps&&SAVE.stamps[mk])||[], stampDone=arr.includes(t), n=arr.length, month=d.getMonth()+1;
  const lim=ITEM['m'+mk.slice(5)], rewarded=SAVE.rewards&&SAVE.rewards[mk];
- const chances=new Date(d.getFullYear(),month,0).getDate()-d.getDate()+(done?0:1);
+ const chances=new Date(d.getFullYear(),month,0).getDate()-d.getDate()+(stampDone?0:1);
+ const dy=dailyState(), newsOk=dy.news>=1, questOk=dy.boss>=1||dy.std>=2, all=newsOk&&questOk;
  let slots=''; for(let i=0;i<20;i++){ const f=i<n, last=i===19;
   slots+='<span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm '+(last?(rewarded?'bg-fuchsia-200 border-2 border-fuchsia-400':'border-2 border-dashed border-fuchsia-400 bg-fuchsia-50'):(f?'bg-amber-300':'bg-slate-100'))+'">'+(last?lim.icon:(f?'🌟':''))+'</span>'; }
  const msg=rewarded?'✅ '+lim.name+' ゲット済み！':'あと'+Math.max(0,20-n)+'回で「'+lim.name+'」（のこり'+chances+'日）';
- const btn=done?'<div class="flex-1 bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 text-center font-black text-emerald-700">✅ 今日のスタンプ ゲット！ また明日！</div>'
-  :'<button onclick="initNewsMode()" class="mission-pulse flex-1 bg-gradient-to-r from-orange-500 to-amber-400 text-white font-black rounded-2xl p-3 shadow-lg text-lg">📰 今日のミッション<br><span class="text-sm font-bold">ニュースを1回タイピングして スタンプをもらおう！</span></button>';
- $('mission-card').innerHTML='<div class="flex flex-col sm:flex-row gap-3 items-stretch">'+btn+'<div class="sm:w-80 bg-white border-2 border-slate-200 rounded-2xl p-3"><div class="text-xs font-bold text-slate-500 mb-2">'+month+'月のスタンプ '+Math.min(n,20)+'/20　<span class="text-fuchsia-600">'+msg+'</span></div><div class="grid grid-cols-10 gap-1">'+slots+'</div></div></div>';
+ const mk2=ok=>ok?'✅':'⬜', bc='text-xs font-black rounded-full px-3 py-1 bg-orange-500 text-white shrink-0 ';
+ const newsBtn=newsOk?'':'<button onclick="initNewsMode()" class="'+bc+'mission-pulse">ニュースへ</button>';
+ const questBtn=questOk?'':'<button onclick="initPatternB()" class="'+bc+(newsOk?'mission-pulse':'')+'">クエストへ</button>';
+ const left='<div class="flex-1 rounded-2xl p-3 border-2 '+(all?'bg-emerald-50 border-emerald-300':'bg-orange-50 border-orange-300')+'">'+
+  '<div class="font-black text-lg text-slate-800">📋 今日のやること '+(all?'<span class="text-emerald-600">🎉 ぜんぶクリア！</span>':'')+'</div>'+
+  '<div class="mt-2 space-y-2 text-sm font-bold text-slate-700">'+
+  '<div class="flex items-center justify-between gap-2"><span>'+mk2(newsOk)+' 📰 今日のニュース 1つ</span>'+newsBtn+'</div>'+
+  '<div class="flex items-center justify-between gap-2"><span>'+mk2(questOk)+' ⚔️ クエスト：<b>ボス戦 1つ</b> <span class="text-slate-400 font-normal">（'+Math.min(dy.boss,1)+'/1）</span> <span class="text-slate-500">または</span> <b>スタンダード 2つ</b> <span class="text-slate-400 font-normal">（'+Math.min(dy.std,2)+'/2）</span></span>'+questBtn+'</div>'+
+  '</div></div>';
+ $('mission-card').innerHTML='<div class="flex flex-col sm:flex-row gap-3 items-stretch">'+left+'<div class="sm:w-80 bg-white border-2 border-slate-200 rounded-2xl p-3"><div class="text-xs font-bold text-slate-500 mb-2">'+month+'月のスタンプ '+Math.min(n,20)+'/20　<span class="text-fuchsia-600">'+msg+'</span></div><div class="grid grid-cols-10 gap-1">'+slots+'</div></div></div>';
 }
 function openInventory(){ renderInventory(); $('inv-modal').classList.remove('hidden'); }
 function closeInventory(){ $('inv-modal').classList.add('hidden'); renderMenu(); }
@@ -541,6 +557,9 @@ function importCode(){
 
 // ---------- クエスト戦闘 ----------
 const MAXHP=5;
+let guardUntil=0, guardTimer=null;
+const GUARD_MS=1500;   // ミスのあと、この時間内の連続ミスは「1回分」とみなす（0にすると無効）。正しいキーを1回打てば、すぐ解除
+function showGuard(on){ if(!questMode) return; const el=$('bt-player'); el.classList.toggle('bt-guard',on); clearTimeout(guardTimer); if(on) guardTimer=setTimeout(()=>el.classList.remove('bt-guard'),GUARD_MS); }
 let questMode=false, locked=false, playerHP=MAXHP, questTotal=0, questDone=0, sentDone=0, enemyLv=0, enemyStage=0;
 const ENEMY_COL={kokugo:{body:'#4338ca',dark:'#1e1b4b',hl:'#a5b4fc'},rika:{body:'#4ade80',dark:'#166534',hl:'#dcfce7'},shakai:{body:'#f5f5f4',dark:'#78716c',hl:'#ffffff'}};
 const ENEMY_NAME={kokugo:['インクぼうや','ぷんぷんインク','みつめインク','おおぐちインク','よつめインク','ぬりつぶしの王'],
@@ -648,7 +667,7 @@ function battleMiss(){
  if(playerHP<=0) playerDown();
 }
 function playerDown(){
- locked=true; $('bt-msg').textContent='ダウン！ もういちど！'; $('bt-msg').classList.remove('hidden');
+ guardUntil=0; showGuard(false); locked=true; $('bt-msg').textContent='ダウン！ もういちど！'; $('bt-msg').classList.remove('hidden');
  questDone=Math.max(0,questDone-sentDone); sentDone=0; updateBattle();   // 敵は少し回復
  playSentences[currentSentenceIndex].log=[];
  clearTimeout(gameTimer);
@@ -662,7 +681,7 @@ let kuroshiro=null, audioCtx=null, isMuted=false, gameTimer=null;
 let globalSentences=[], playSentences=[], missedSentencesForNextRun=[];
 let currentSentenceIndex=0, parsedNodes=[], currentNodeIndex=0, currentTypingState="";
 let isPlaying=false, startTime=0, totalTypedCount=0, missCount=0, sentenceMissed=false, currentInputHadMiss=false;
-let missedKeyCounts={}, lastGameSettings={length:'150',isRandom:false};
+let missedKeyCounts={}, lastGameSettings={length:'200',isRandom:false};
 const $ = id => document.getElementById(id);
 
 // ---------- キーボード生成 ----------
@@ -697,7 +716,7 @@ function flashError(){ const g=$('game-screen'); g.classList.remove('flash-error
 // ---------- 読みの補正（日付・年・人数・よく間違える言葉）----------
 // 自動変換が間違えやすい読みを、先にひらがなにしてから変換にかけます。
 // 足したい言葉は READING_WORDS に ['漢字','よみ'] を1行ずつ足せば直ります（長い言葉を先に書く）。
-const READING_WORDS=[['読み仮名','よみがな'],['振り仮名','ふりがな'],['平仮名','ひらがな'],['片仮名','かたかな'],['仮名遣い','かなづかい'],['仮名','かな'],['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな'],['上手','じょうず'],['下手','へた'],['大丈夫','だいじょうぶ'],['果物','くだもの'],['眼鏡','めがね'],['部屋','へや'],['一昨日','おととい'],['明後日','あさって'],['今夜','こんや'],['大勢','おおぜい']];
+const READING_WORDS=[['七転び八起き','ななころびやおき'],['七転八倒','しちてんばっとう'],['急がば回れ','いそがばまわれ'],['身から出たさび','みからでたさび'],['一期一会','いちごいちえ'],['温故知新','おんこちしん'],['晴耕雨読','せいこううどく'],['自画自賛','じがじさん'],['勇猛果敢','ゆうもうかかん'],['異口同音','いくどうおん'],['四字熟語','よじじゅくご'],['祇園精舎','ぎおんしょうじゃ'],['清少納言','せいしょうなごん'],['梅雨','つゆ'],['扇状地','せんじょうち'],['三角州','さんかくす'],['代かき','しろかき'],['田おこし','たおこし'],['稲刈り','いねかり'],['子葉','しよう'],['高潮','たかしお'],['稚魚','ちぎょ'],['沖合','おきあい'],['羊水','ようすい'],['胎盤','たいばん'],['農協','のうきょう'],['読み仮名','よみがな'],['振り仮名','ふりがな'],['平仮名','ひらがな'],['片仮名','かたかな'],['仮名遣い','かなづかい'],['仮名','かな'],['三日月','みかづき'],['日本人','にほんじん'],['日本語','にほんご'],['日本中','にほんじゅう'],['日本','にほん'],['世界中','せかいじゅう'],['一日中','いちにちじゅう'],['今日','きょう'],['昨日','きのう'],['明日','あした'],['今年','ことし'],['今朝','けさ'],['大人','おとな'],['上手','じょうず'],['下手','へた'],['大丈夫','だいじょうぶ'],['果物','くだもの'],['眼鏡','めがね'],['部屋','へや'],['一昨日','おととい'],['明後日','あさって'],['今夜','こんや'],['大勢','おおぜい']];
 const DAY_READ={1:'ついたち',2:'ふつか',3:'みっか',4:'よっか',5:'いつか',6:'むいか',7:'なのか',8:'ようか',9:'ここのか',10:'とおか',14:'じゅうよっか',17:'じゅうしちにち',19:'じゅうくにち',20:'はつか',24:'にじゅうよっか',27:'にじゅうしちにち',29:'にじゅうくにち'};
 const KN={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
 function kanjiNum(t){ const m=t.match(/^(?:([二三])?十([一二三四五六七八九])?|([一二三四五六七八九]))$/); if(!m) return 0; if(m[3]) return KN[m[3]]; return (m[1]?KN[m[1]]:1)*10+(m[2]?KN[m[2]]:0); }
@@ -738,8 +757,13 @@ function workerConvert(lines){
  return new Promise(res=>{ const id=Math.random(); const h=e=>{ if(e.data.t==='done'&&e.data.id===id){ kanaWorker.removeEventListener('message',h); res(e.data.out); } };
   kanaWorker.addEventListener('message',h); kanaWorker.postMessage({id,lines}); });
 }
-async function toKana(lines){
- const src=lines.map(fixReadings), res=src.map(l=>HAS_KANJI.test(l)?null:l), need=[];
+const KANA_VER='2026-10-27a';   // 読みの補正表を直したら、この文字を変えると保存した読みが作り直されます
+let KCACHE={}; try{ const j=JSON.parse(localStorage.getItem('typingKanaCache')||'null'); if(j&&j.v===KANA_VER) KCACHE=j.m||{}; }catch(e){}
+function kcSave(){ try{ localStorage.setItem('typingKanaCache',JSON.stringify({v:KANA_VER,m:KCACHE})); }catch(e){} }
+function showBusy(m){ $('busy').textContent=m; $('busy').classList.remove('hidden'); }
+function hideBusy(){ $('busy').classList.add('hidden'); }
+async function toKana(lines,store){
+ const src=lines.map(fixReadings), res=src.map((l,i)=>HAS_KANJI.test(l)?((store&&KCACHE[lines[i]])||null):l), need=[];
  res.forEach((r,i)=>{ if(r===null) need.push(i); });
  if(need.length){
   let out;
@@ -748,9 +772,14 @@ async function toKana(lines){
    if(!kuroshiro){ kuroshiro=new Kuroshiro(); await kuroshiro.init(new KuromojiAnalyzer({dictPath:"https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict"})); }
    out=[]; for(const i of need) out.push(await kuroshiro.convert(src[i],{to:'hiragana'}));
   }
-  need.forEach((i,k)=>{ res[i]=out[k]; });
+  need.forEach((i,k)=>{ res[i]=toNorm(out[k]); if(store) KCACHE[lines[i]]=res[i]; });
+  if(store) kcSave();
  }
  return res.map(toNorm);
+}
+async function prewarmKana(){                                   // 開いてしばらくしたら、教材の読み仮名を裏で準備
+ const miss=[]; Object.values(textbookData).forEach(v=>v.units.forEach(u=>u.sentences.forEach(x=>{ if(!x.kana&&!KCACHE[x.kanji]) miss.push(x.kanji); })));
+ if(miss.length){ try{ await toKana(miss,true); }catch(e){} }
 }
 
 // ---------- パーサ ----------
@@ -802,12 +831,14 @@ async function prepareAndStartCustomGame(lines,btn){
 async function prepareAndStartPresetGame(objs,len,rnd){
  initAudio(); globalSentences=[];
  try{
+  const need=objs.filter(o=>!o.kana);
+  if(need.length){ if(need.some(o=>!KCACHE[o.kanji])) showBusy('読み仮名を準備しています…（初回だけ少し時間がかかります）'); const ks=await toKana(need.map(o=>o.kanji),true); need.forEach((o,i)=>{ o.kana=ks[i]; }); hideBusy(); }
   for(const o of objs){
    let kana=o.kana;
    if(!kana){ kana=(await toKana([o.kanji]))[0]; o.kana=kana; }
    const n=parseKanaSentence(kana); if(n.some(x=>x.type==='char')) globalSentences.push({kanji:o.kanji,kana,nodes:n});
   }
- }catch(e){ alert('読み仮名の準備に失敗しました。ネットワーク接続を確認してください。'); return; }
+ }catch(e){ hideBusy(); alert('読み仮名の準備に失敗しました。ネットワーク接続を確認してください。'); return; }
  lastGameSettings={length:len,isRandom:rnd}; startGame(extractPreset(globalSentences,len,rnd));
 }
 function extractPreset(arr,len,rnd){
@@ -855,7 +886,7 @@ function initPatternB(){
     const ub=document.createElement('button'); ub.className='p-6 bg-white border-2 border-slate-200 rounded-2xl text-left hover:border-yellow-400';
     const lv=subj.units.indexOf(u), done=SAVE.cleared[u.subject+':'+u.title];
         ub.innerHTML=`<div class="flex items-center gap-3"><div class="w-14 h-14 shrink-0">${enemySVG(u.subject,lv,0,false)}</div><div><div class="font-bold text-lg text-slate-700">${u.title}${done?' ✅':''}</div><div class="text-xs text-slate-400">${ENEMY_NAME[u.subject][lv]}${lv>=5?'（ボス）':''}</div></div></div>`;
-    ub.onclick=()=>{ patBUnit=u; initAudio(); sfxEncounter(); showEncounter(u,lv); $('pat-b-modal-title').textContent=u.title; $('pat-b-modal').classList.remove('hidden'); $('pat-b-start-btn').className=`w-full text-white font-black py-4 rounded-xl shadow-lg text-xl ${subj.btn}`; };
+    ub.onclick=()=>{ patBUnit=u; { const tot=u.sentences.reduce((a,x)=>a+x.kanji.length,0); $('pat-b-length').options[2].textContent='ボス戦（全文・'+tot+'文字）'; } initAudio(); sfxEncounter(); showEncounter(u,lv); $('pat-b-modal-title').textContent=u.title; $('pat-b-modal').classList.remove('hidden'); $('pat-b-start-btn').className=`w-full text-white font-black py-4 rounded-xl shadow-lg text-xl ${subj.btn}`; };
     uc.appendChild(ub);
    });
   };
@@ -881,7 +912,7 @@ function initNewsMode(){
  $('news-preview').innerHTML=`<span class="font-black text-indigo-700 text-xl">【${rn.title}】</span>`+(when?`<span class="ml-2 text-sm text-slate-400">${when}</span>`:'')+'<br><br>'+rn.sentences.map(s=>s.kanji).join('<br>');
  $('start-news-btn').onclick=()=>{ gameCtx=null; questMode=false; newsRun=true; $('game-header-title').textContent=`キーワード: ${rn.title}`; prepareAndStartPresetGame(rn.sentences,'ALL',false); };
 }
-window.addEventListener('DOMContentLoaded',()=>{ switchScreen('main-menu'); loadNewsPack(); });
+window.addEventListener('DOMContentLoaded',()=>{ switchScreen('main-menu'); loadNewsPack(); setTimeout(prewarmKana,2500); });
 
 // ---------- ゲーム本体 ----------
 function startGame(sentences,missRun=false){ runIsMiss=missRun;
@@ -942,7 +973,7 @@ function kanjiRange(L,fin){
 function loadSentence(){
  if(!isPlaying) return;
  if(currentSentenceIndex>=playSentences.length){ if(questMode){ enemyKO(); gameTimer=setTimeout(finishGame,1300); } else finishGame(); return; }
- const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false; sentDone=0;
+ const s=playSentences[currentSentenceIndex]; parsedNodes=s.nodes; currentNodeIndex=0; currentTypingState=""; sentenceMissed=false; currentInputHadMiss=false; showHint=false; sentDone=0; guardUntil=0;
  const kd=$('kanji-display'); kd.innerHTML='';
  const nCh=Array.from(s.kanji).length; kd.style.fontSize=nCh>160?'clamp(1rem,2.6vh,1.5rem)':nCh>80?'clamp(1.2rem,3.6vh,2.1rem)':'clamp(1.5rem,5vh,3rem)'; $('kanji-scroll').scrollTop=0;
  const chars=Array.from(s.kanji);
@@ -1002,12 +1033,15 @@ function handleKey(key){
  const matches=node.romajiPatterns.filter(p=>p.startsWith(test));
  if(matches.length){
   playSentences[currentSentenceIndex].log.push({char:input,miss:currentInputHadMiss}); currentInputHadMiss=false;
-  currentTypingState=test; totalTypedCount++; showHint=false;
+  currentTypingState=test; totalTypedCount++; showHint=false; guardUntil=0; showGuard(false);
   if(matches.includes(test)&&!matches.some(p=>p.length>test.length)) advance(); else updateHighlighting();
   return;
  }
  if(currentTypingState&&node.romajiPatterns.includes(currentTypingState)&&canAcceptEarly(node)){ advance(); handleKey(key); return; }
+ const nowT=performance.now();
+ if(nowT<guardUntil){ currentInputHadMiss=true; showHint=true; updateHighlighting(); return; }   // 連続ミスは数えない
  currentInputHadMiss=true; showHint=true; missCount++; sentenceMissed=true; playErrorSound(); flashError();
+ if(GUARD_MS>0){ guardUntil=nowT+GUARD_MS; showGuard(true); }
  const exp=node.romajiPatterns.filter(p=>p.startsWith(currentTypingState)).map(p=>p[currentTypingState.length]).filter(Boolean);
  const k=exp.length?exp[0]:'-'; missedKeyCounts[k]=(missedKeyCounts[k]||0)+1; updateHighlighting();
  if(questMode) battleMiss();
@@ -1032,6 +1066,7 @@ function finishGame(){
  $('res-accuracy').textContent=(acc*100).toFixed(1)+'%';
  $('res-weak-keys').textContent=Object.entries(missedKeyCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(k=>k[0]).join(' ')||'-';
  $('res-comment').textContent=acc>=.95&&kpm>=150?"完璧だ！鬼に金棒だね！":acc>=.9?"素晴らしい！「石の上にも三年」だね！":acc>=.8?"よく頑張ったね！「千里の道も一歩から」！":"あきらめないで！間違えた所を復習しよう。";
+ if(questMode&&gameCtx&&!runIsMiss&&totalTypedCount>=20) markDaily(({'100':'short','200':'std','ALL':'boss'})[lastGameSettings.length]||'short');
  showDrop(acc); if(newsRun) showStamp(addStamp());
  showPets(checkPets());
  const rb=$('result-sentences'); rb.innerHTML='';
