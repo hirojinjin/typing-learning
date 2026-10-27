@@ -104,7 +104,7 @@ body { font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:#
       <div class="text-5xl mb-4">⚔️</div><h2 class="text-xl font-bold text-slate-800 mb-2">教科書 (クエスト)</h2>
       <p class="text-sm text-slate-500 text-center">モンスターと戦おう！<br>勝つとそうびをゲット</p></button>
   </div>
-  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第4弾</div>
+  <div class="mt-6 text-center text-xs text-slate-400">版 2026-10-26 第4弾a</div>
 </div>
 
 <!-- Keyword Screen -->
@@ -903,6 +903,7 @@ async function loadNewsPack(){
  try{
   const r=await fetch('news.json',{cache:'no-store'}); if(!r.ok) throw new Error(r.status);
   const j=await r.json(); const items=(j.items||[]).filter(i=>i.sentences&&i.sentences.length);
+  items.forEach(i=>{ i.title=String(i.title||'').replace(/<[^>]*>/g,'').trim(); i.sentences=i.sentences.map(x=>({kanji:String(x.kanji||'').replace(/<[^>]*>/g,'').trim(),kana:x.kana?String(x.kana).replace(/<[^>]*>/g,'').trim():''})).filter(x=>x.kanji); });   // 引用タグなどが混ざっていたら取り除く
   if(items.length){ newsPack=items; newsUpdated=j.updated||''; }
  }catch(e){ /* ファイルを直接開いた場合や未配置の場合は内蔵データを使う */ }
 }
