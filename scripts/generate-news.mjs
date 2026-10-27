@@ -33,6 +33,7 @@ const prompt = `今日は${today}です。直近1週間ほどの日本と世界�
 - 検索で確認できた事実だけを書き、推測や評価は書かない。
 - 各件は2〜3文。1文は30〜60文字。漢字かな交じりで、むずかしい言葉には短い説明を添える。
 - 数字は漢数字で書く。使ってよい記号は「」、。のみ。英字や括弧は使わない。
+- 引用の印（<cite>など）やHTMLタグ、出典の記号は、文章の中に一切入れない。
 - 出力はJSONのみ。説明文やコードブロックは付けない。
 形式: {"items":[{"title":"分野と話題の短い題名","sentences":["…","…"]}]}`;
 
@@ -75,10 +76,10 @@ catch (e) { console.error('JSONを読み取れませんでした:\n', allText.sl
 const BAN = /殺|死亡|死者|遺体|暴行|逮捕|容疑|テロ|戦死|虐待|性的|自殺|爆発|銃/;
 const date = today.slice(5).replace('-', '/');
 const items = (parsed.items || [])
-  .map(i => ({ title: String(i.title || '').trim().slice(0, 30), date,
-               sentences: (i.sentences || []).map(s => ({ kanji: String(s).trim() })) }))
+  .map(i => ({ title: String(i.title || '').replace(/<[^>]*>/g, '').trim().slice(0, 30), date,
+               sentences: (i.sentences || []).map(s => ({ kanji: String(s).replace(/<[^>]*>/g, '').trim() })) }))
   .filter(i => i.title && !BAN.test(i.title) && i.sentences.length >= 2 &&
-               i.sentences.every(s => s.kanji.length >= 15 && s.kanji.length <= 90 && !/\n/.test(s.kanji) && !BAN.test(s.kanji)));
+               i.sentences.every(s => s.kanji.length >= 15 && s.kanji.length <= 90 && !/\n/.test(s.kanji) && !/[<>]/.test(s.kanji) && !BAN.test(s.kanji)));
 
 // 読み仮名をここで付ける（ブラウザで辞書を読むと重くて固まるため）
 let final = items;
